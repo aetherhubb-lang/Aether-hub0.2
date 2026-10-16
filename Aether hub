@@ -1,6 +1,5 @@
 -- ============================================================
 -- AETHER HUB - PARTE 1/4
--- Serviços, Paleta, Config, Bypass (vars/funções) e UI Base
 -- ============================================================
 
 local Players          = game:GetService("Players")
@@ -12,9 +11,7 @@ local LocalPlayer      = Players.LocalPlayer
 local lp               = LocalPlayer
 local Camera           = workspace.CurrentCamera
 
--- ============================================================
--- 🎨 PALETA DE ROXOS (animada)
--- ============================================================
+-- PALETA DE ROXOS
 local PurpleColors = {
     Color3.fromRGB(190, 150, 255),
     Color3.fromRGB(140,  80, 230),
@@ -30,18 +27,14 @@ local COR_TEXTO     = Color3.fromRGB(200, 170, 255)
 local COR_TEXTO_OFF = Color3.fromRGB(150, 120, 200)
 local COR_DIVISOR   = Color3.fromRGB(45, 25, 75)
 
--- ============================================================
--- 📐 TAMANHOS
--- ============================================================
+-- TAMANHOS
 local NORMAL_SIZE = UDim2.new(0, 420, 0, 340)
 local NORMAL_POS  = UDim2.new(0.5, -210, 0.5, -170)
 local MIN_SIZE    = UDim2.new(0, 420, 0, 55)
 
 local KEY_VALIDA  = "teste"
 
--- ============================================================
 -- ESTADO
--- ============================================================
 local Estado = {
     HubAberto = true,
     GojoAtivo = false,
@@ -52,9 +45,7 @@ local Estado = {
     FlyGyro = nil
 }
 
--- ============================================================
--- BYPASS: variáveis e funções
--- ============================================================
+-- BYPASS
 local autoBypassActive = false
 local velocidadeAtual  = 2
 local alturaSubida     = 70
@@ -117,9 +108,7 @@ local function flyProVoid()
     return true
 end
 
--- ============================================================
--- 🖼️ GUI PRINCIPAL
--- ============================================================
+-- GUI PRINCIPAL
 if CoreGui:FindFirstChild("AetherHub") then
     CoreGui.AetherHub:Destroy()
 end
@@ -141,9 +130,7 @@ if not ScreenGui.Parent then
     ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 end
 
--- ============================================================
--- 📦 CONTAINER PRINCIPAL
--- ============================================================
+-- CONTAINER PRINCIPAL
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = NORMAL_SIZE
@@ -174,9 +161,7 @@ MainGradient.Color = ColorSequence.new({
 MainGradient.Rotation = 45
 MainGradient.Parent = MainFrame
 
--- ============================================================
--- 🌈 HEADER
--- ============================================================
+-- HEADER
 local Header = Instance.new("Frame")
 Header.Name = "Header"
 Header.Size = UDim2.new(1, 0, 0, 55)
@@ -204,7 +189,6 @@ HeaderGradient.Color = ColorSequence.new({
 HeaderGradient.Rotation = 90
 HeaderGradient.Parent = Header
 
--- LOGO
 local LogoImage = Instance.new("ImageLabel")
 LogoImage.Name = "Logo"
 LogoImage.Size = UDim2.new(0, 40, 0, 40)
@@ -223,7 +207,6 @@ LogoStroke.Color = PurpleColors[1]
 LogoStroke.Transparency = 0.1
 LogoStroke.Parent = LogoImage
 
--- TÍTULO
 local Title = Instance.new("TextLabel")
 Title.Name = "Title"
 Title.Size = UDim2.new(0, 200, 0, 40)
@@ -242,7 +225,6 @@ TitleStroke.Color = Color3.fromRGB(255, 255, 255)
 TitleStroke.Transparency = 0.7
 TitleStroke.Parent = Title
 
--- BOTÃO MINIMIZAR
 local MinButton = Instance.new("TextButton")
 MinButton.Name = "MinButton"
 MinButton.Size = UDim2.new(0, 32, 0, 32)
@@ -265,10 +247,8 @@ MinStroke.Color = PurpleColors[1]
 MinStroke.Transparency = 0.2
 MinStroke.Parent = MinButton-- ============================================================
 -- AETHER HUB - PARTE 2/4
--- Cadeado + Conteúdo + Extras + Painelzinho 🌌 + Minimizar
 -- ============================================================
 
--- BOTÃO CADEADO
 local LockButton = Instance.new("TextButton")
 LockButton.Name = "LockButton"
 LockButton.Size = UDim2.new(0, 32, 0, 32)
@@ -291,7 +271,7 @@ LockStroke.Color = PurpleColors[1]
 LockStroke.Transparency = 0.2
 LockStroke.Parent = LockButton
 
--- ÁREA DE CONTEÚDO PRINCIPAL
+-- CONTEÚDO PRINCIPAL
 local Content = Instance.new("ScrollingFrame")
 Content.Name = "Content"
 Content.Size = UDim2.new(1, -20, 1, -75)
@@ -319,7 +299,7 @@ ContentLayout.Padding = UDim.new(0, 0)
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ContentLayout.Parent = Content
 
--- ÁREA DE EXTRAS
+-- EXTRAS
 local ExtrasContent = Instance.new("ScrollingFrame")
 ExtrasContent.Name = "ExtrasContent"
 ExtrasContent.Size = UDim2.new(1, -20, 1, -75)
@@ -348,7 +328,6 @@ ExtrasLayout.Padding = UDim.new(0, 0)
 ExtrasLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ExtrasLayout.Parent = ExtrasContent
 
--- Botão "← Voltar"
 local BackBtn = Instance.new("TextButton")
 BackBtn.Name = "BackBtn"
 BackBtn.Size = UDim2.new(1, 0, 0, 42)
@@ -392,7 +371,7 @@ MiniIcon.TextScaled = false
 MiniIcon.ZIndex = 6
 MiniIcon.Parent = MiniPanel
 
--- FUNÇÃO criarLinha
+-- FUNÇÕES
 local function criarLinha(nomeBase, layoutOrder)
     local row = Instance.new("Frame")
     row.Name = nomeBase .. "Row"
@@ -430,7 +409,6 @@ local function criarLinha(nomeBase, layoutOrder)
     return btn, nomeBase
 end
 
--- FUNÇÃO criarLinhaExtras
 local function criarLinhaExtras(nomeBase, layoutOrder)
     local row = Instance.new("Frame")
     row.Name = nomeBase .. "Row"
@@ -481,7 +459,7 @@ LockButton.MouseButton1Click:Connect(function()
     LockButton.Text = MainFrame.Draggable and "🔓" or "🔒"
 end)
 
--- MINIMIZAR → PAINELZINHO 🌌 / RESTAURAR
+-- MINIMIZAR / RESTAURAR
 local isMinimized = false
 local MIN_PANEL_SIZE = UDim2.new(0, 60, 0, 60)
 
@@ -534,7 +512,6 @@ MiniPanel.MouseLeave:Connect(function()
     TweenService:Create(MiniIcon, TweenInfo.new(0.15), { TextSize = 32 }):Play()
 end)-- ============================================================
 -- AETHER HUB - PARTE 3/4
--- Gojo 0.2 | Focus | Fly
 -- ============================================================
 
 -- GOJO 0.2
@@ -730,7 +707,6 @@ FlyBtn.MouseButton1Click:Connect(function()
     end
 end)-- ============================================================
 -- AETHER HUB - PARTE 4/4
--- Bypass | Extras | Key | Animações | Atalho | Limpeza
 -- ============================================================
 
 -- BYPASS
@@ -847,6 +823,155 @@ BackBtn.MouseEnter:Connect(function() BackBtn.TextColor3 = COR_TEXTO end)
 BackBtn.MouseLeave:Connect(function() BackBtn.TextColor3 = PurpleColors[1] end)
 
 -- ============================================================
+-- ⚙️ CONFIGURAÇÕES (dentro da aba Extras)
+-- ============================================================
+local ConfigBtn, ConfigNome = criarLinhaExtras("⚙️ Configurações", 1)
+local ConfigAberto = false
+local ConfigConexoes = {}
+
+local function fecharConfigs()
+    for _, nome in ipairs({"FullbrightRow", "GodModeRow", "SpeedRow", "NoclipRow", "InfiniteJumpRow", "RejoinRow"}) do
+        local r = ExtrasContent:FindFirstChild(nome)
+        if r then r:Destroy() end
+    end
+    for _, c in pairs(ConfigConexoes) do pcall(function() c:Disconnect() end) end
+    ConfigConexoes = {}
+
+    pcall(function()
+        local L = game:GetService("Lighting")
+        L.Brightness = 1
+        L.GlobalShadows = true
+        local char = lp.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.MaxHealth = 100
+            hum.Health = 100
+            hum.WalkSpeed = 16
+            hum.UseJumpPower = true
+            hum.JumpPower = 50
+        end
+        if char then
+            for _, p in pairs(char:GetDescendants()) do
+                if p:IsA("BasePart") then p.CanCollide = true end
+            end
+        end
+    end)
+
+    ConfigAberto = false
+    setLinhaAtiva(ConfigBtn, ConfigNome, false)
+end
+
+local function abrirConfigs()
+    ConfigAberto = true
+    setLinhaAtiva(ConfigBtn, ConfigNome, true)
+
+    -- 🌟 FULLBRIGHT
+    local FullBtn, FullNome = criarLinhaExtras("🌟 Fullbright", 2)
+    FullBtn.Parent.Name = "FullbrightRow"
+    FullBtn.MouseButton1Click:Connect(function()
+        local ativo = not FullBtn:GetAttribute("ativo")
+        setLinhaAtiva(FullBtn, FullNome, ativo)
+        local L = game:GetService("Lighting")
+        if ativo then
+            L.Brightness = 5
+            L.ClockTime = 14
+            L.FogEnd = 100000
+            L.GlobalShadows = false
+        else
+            L.Brightness = 1
+            L.GlobalShadows = true
+        end
+    end)
+
+    -- 🛡️ GOD MODE
+    local GodBtn, GodNome = criarLinhaExtras("🛡️ God Mode", 3)
+    GodBtn.Parent.Name = "GodModeRow"
+    GodBtn.MouseButton1Click:Connect(function()
+        local ativo = not GodBtn:GetAttribute("ativo")
+        setLinhaAtiva(GodBtn, GodNome, ativo)
+        if ativo then
+            local con = RunService.Heartbeat:Connect(function()
+                if not GodBtn:GetAttribute("ativo") then return end
+                local char = lp.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    hum.MaxHealth = math.huge
+                    hum.Health = math.huge
+                end
+            end)
+            table.insert(ConfigConexoes, con)
+        end
+    end)
+
+    -- ⚡ SPEED HACK
+    local SpeedBtn, SpeedNome = criarLinhaExtras("⚡ Speed Hack", 4)
+    SpeedBtn.Parent.Name = "SpeedRow"
+    SpeedBtn.MouseButton1Click:Connect(function()
+        local ativo = not SpeedBtn:GetAttribute("ativo")
+        setLinhaAtiva(SpeedBtn, SpeedNome, ativo)
+        local char = lp.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = ativo and 100 or 16 end
+    end)
+
+    -- 🕳️ NOCLIP
+    local NoclipBtn, NoclipNome = criarLinhaExtras("🕳️ Noclip", 5)
+    NoclipBtn.Parent.Name = "NoclipRow"
+    NoclipBtn.MouseButton1Click:Connect(function()
+        local ativo = not NoclipBtn:GetAttribute("ativo")
+        setLinhaAtiva(NoclipBtn, NoclipNome, ativo)
+        if ativo then
+            local con = RunService.Stepped:Connect(function()
+                if not NoclipBtn:GetAttribute("ativo") then return end
+                local char = lp.Character
+                if char then
+                    for _, p in pairs(char:GetDescendants()) do
+                        if p:IsA("BasePart") then p.CanCollide = false end
+                    end
+                end
+            end)
+            table.insert(ConfigConexoes, con)
+        end
+    end)
+
+    -- 🦘 INFINITE JUMP
+    local JumpBtn, JumpNome = criarLinhaExtras("🦘 Infinite Jump", 6)
+    JumpBtn.Parent.Name = "InfiniteJumpRow"
+    JumpBtn.MouseButton1Click:Connect(function()
+        local ativo = not JumpBtn:GetAttribute("ativo")
+        setLinhaAtiva(JumpBtn, JumpNome, ativo)
+        if ativo then
+            local con = UserInputService.JumpRequest:Connect(function()
+                if not JumpBtn:GetAttribute("ativo") then return end
+                local char = lp.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+            end)
+            table.insert(ConfigConexoes, con)
+        end
+    end)
+
+    -- 🔄 REJOIN
+    local RejoinBtn = criarLinhaExtras("🔄 Rejoin Server", 7)
+    RejoinBtn.Parent.Name = "RejoinRow"
+    RejoinBtn.MouseButton1Click:Connect(function()
+        RejoinBtn.Text = "🔄 Reconectando..."
+        task.wait(0.5)
+        pcall(function()
+            game:GetService("TeleportService"):Teleport(game.PlaceId, lp)
+        end)
+    end)
+end
+
+ConfigBtn.MouseButton1Click:Connect(function()
+    if ConfigAberto then
+        fecharConfigs()
+    else
+        abrirConfigs()
+    end
+end)
+
+-- ============================================================
 -- 🔐 SISTEMA DE KEY
 -- ============================================================
 local KeyGui = Instance.new("ScreenGui")
@@ -939,7 +1064,7 @@ TweenService:Create(MainFrame, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.E
     Position = NORMAL_POS,
 }):Play()
 
--- LOOP DE CORES ANIMADAS
+-- LOOP DE CORES
 task.spawn(function()
     while MainFrame.Parent do
         currentColorIndex = currentColorIndex % #PurpleColors + 1
@@ -963,7 +1088,7 @@ task.spawn(function()
     end
 end)
 
--- ATALHO (RightCtrl)
+-- ATALHO
 UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == Enum.KeyCode.RightControl then
