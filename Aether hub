@@ -265,7 +265,7 @@ MinStroke.Color = PurpleColors[1]
 MinStroke.Transparency = 0.2
 MinStroke.Parent = MinButton-- ============================================================
 -- AETHER HUB - PARTE 2/4
--- Cadeado + Conteúdo + criarLinha + Minimizar
+-- Cadeado + Conteúdo + Extras + Painelzinho 🌌 + Minimizar
 -- ============================================================
 
 -- BOTÃO CADEADO
@@ -291,7 +291,7 @@ LockStroke.Color = PurpleColors[1]
 LockStroke.Transparency = 0.2
 LockStroke.Parent = LockButton
 
--- ÁREA DE CONTEÚDO
+-- ÁREA DE CONTEÚDO PRINCIPAL
 local Content = Instance.new("ScrollingFrame")
 Content.Name = "Content"
 Content.Size = UDim2.new(1, -20, 1, -75)
@@ -318,6 +318,79 @@ local ContentLayout = Instance.new("UIListLayout")
 ContentLayout.Padding = UDim.new(0, 0)
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ContentLayout.Parent = Content
+
+-- ÁREA DE EXTRAS
+local ExtrasContent = Instance.new("ScrollingFrame")
+ExtrasContent.Name = "ExtrasContent"
+ExtrasContent.Size = UDim2.new(1, -20, 1, -75)
+ExtrasContent.Position = UDim2.new(0, 10, 0, 65)
+ExtrasContent.BackgroundColor3 = COR_CONTEUDO
+ExtrasContent.BorderSizePixel = 0
+ExtrasContent.ScrollBarThickness = 3
+ExtrasContent.ScrollBarImageColor3 = PurpleColors[1]
+ExtrasContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+ExtrasContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
+ExtrasContent.Visible = false
+ExtrasContent.Parent = MainFrame
+
+local ExtrasCorner = Instance.new("UICorner")
+ExtrasCorner.CornerRadius = UDim.new(0, 8)
+ExtrasCorner.Parent = ExtrasContent
+
+local ExtrasStroke = Instance.new("UIStroke")
+ExtrasStroke.Thickness = 1
+ExtrasStroke.Color = PurpleColors[1]
+ExtrasStroke.Transparency = 0.6
+ExtrasStroke.Parent = ExtrasContent
+
+local ExtrasLayout = Instance.new("UIListLayout")
+ExtrasLayout.Padding = UDim.new(0, 0)
+ExtrasLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ExtrasLayout.Parent = ExtrasContent
+
+-- Botão "← Voltar"
+local BackBtn = Instance.new("TextButton")
+BackBtn.Name = "BackBtn"
+BackBtn.Size = UDim2.new(1, 0, 0, 42)
+BackBtn.BackgroundTransparency = 1
+BackBtn.Text = "← Voltar"
+BackBtn.TextColor3 = PurpleColors[1]
+BackBtn.TextSize = 14
+BackBtn.Font = Enum.Font.GothamBold
+BackBtn.BorderSizePixel = 0
+BackBtn.AutoButtonColor = false
+BackBtn.LayoutOrder = 0
+BackBtn.Parent = ExtrasContent
+
+local BackDiv = Instance.new("Frame")
+BackDiv.Size = UDim2.new(0.92, 0, 0, 1)
+BackDiv.Position = UDim2.new(0.04, 0, 1, -1)
+BackDiv.BackgroundColor3 = COR_DIVISOR
+BackDiv.BorderSizePixel = 0
+BackDiv.Parent = BackBtn
+
+-- PAINELZINHO 🌌
+local MiniPanel = Instance.new("TextButton")
+MiniPanel.Name = "MiniPanel"
+MiniPanel.Size = UDim2.new(1, 0, 1, 0)
+MiniPanel.BackgroundTransparency = 1
+MiniPanel.Text = ""
+MiniPanel.AutoButtonColor = false
+MiniPanel.Visible = false
+MiniPanel.ZIndex = 5
+MiniPanel.Parent = MainFrame
+
+local MiniIcon = Instance.new("TextLabel")
+MiniIcon.Name = "MiniIcon"
+MiniIcon.Size = UDim2.new(1, 0, 1, 0)
+MiniIcon.BackgroundTransparency = 1
+MiniIcon.Text = "🌌"
+MiniIcon.TextColor3 = PurpleColors[1]
+MiniIcon.Font = Enum.Font.GothamBold
+MiniIcon.TextSize = 32
+MiniIcon.TextScaled = false
+MiniIcon.ZIndex = 6
+MiniIcon.Parent = MiniPanel
 
 -- FUNÇÃO criarLinha
 local function criarLinha(nomeBase, layoutOrder)
@@ -348,14 +421,48 @@ local function criarLinha(nomeBase, layoutOrder)
     div.Parent = row
 
     btn.MouseEnter:Connect(function()
-        if not btn:GetAttribute("ativo") then
-            btn.TextColor3 = COR_TEXTO
-        end
+        if not btn:GetAttribute("ativo") then btn.TextColor3 = COR_TEXTO end
     end)
     btn.MouseLeave:Connect(function()
-        if not btn:GetAttribute("ativo") then
-            btn.TextColor3 = COR_TEXTO_OFF
-        end
+        if not btn:GetAttribute("ativo") then btn.TextColor3 = COR_TEXTO_OFF end
+    end)
+
+    return btn, nomeBase
+end
+
+-- FUNÇÃO criarLinhaExtras
+local function criarLinhaExtras(nomeBase, layoutOrder)
+    local row = Instance.new("Frame")
+    row.Name = nomeBase .. "Row"
+    row.Size = UDim2.new(1, 0, 0, 42)
+    row.BackgroundTransparency = 1
+    row.LayoutOrder = layoutOrder or 99
+    row.Parent = ExtrasContent
+
+    local btn = Instance.new("TextButton")
+    btn.Name = nomeBase .. "Button"
+    btn.Size = UDim2.new(1, 0, 1, -1)
+    btn.BackgroundTransparency = 1
+    btn.Text = nomeBase .. ": OFF"
+    btn.TextColor3 = COR_TEXTO_OFF
+    btn.TextSize = 14
+    btn.Font = Enum.Font.GothamBold
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+    btn.Parent = row
+
+    local div = Instance.new("Frame")
+    div.Size = UDim2.new(0.92, 0, 0, 1)
+    div.Position = UDim2.new(0.04, 0, 1, -1)
+    div.BackgroundColor3 = COR_DIVISOR
+    div.BorderSizePixel = 0
+    div.Parent = row
+
+    btn.MouseEnter:Connect(function()
+        if not btn:GetAttribute("ativo") then btn.TextColor3 = COR_TEXTO end
+    end)
+    btn.MouseLeave:Connect(function()
+        if not btn:GetAttribute("ativo") then btn.TextColor3 = COR_TEXTO_OFF end
     end)
 
     return btn, nomeBase
@@ -364,11 +471,8 @@ end
 local function setLinhaAtiva(btn, nomeBase, ativo)
     btn:SetAttribute("ativo", ativo)
     btn.Text = nomeBase .. (ativo and ": ON" or ": OFF")
-    if ativo then
-        btn.TextColor3 = PurpleColors[1]
-    else
-        btn.TextColor3 = COR_TEXTO_OFF
-    end
+    if ativo then btn.TextColor3 = PurpleColors[1]
+    else btn.TextColor3 = COR_TEXTO_OFF end
 end
 
 -- LÓGICA CADEADO
@@ -377,25 +481,39 @@ LockButton.MouseButton1Click:Connect(function()
     LockButton.Text = MainFrame.Draggable and "🔓" or "🔒"
 end)
 
--- MINIMIZAR / RESTAURAR
+-- MINIMIZAR → PAINELZINHO 🌌 / RESTAURAR
 local isMinimized = false
+local MIN_PANEL_SIZE = UDim2.new(0, 60, 0, 60)
+
+function minimizar()
+    isMinimized = true
+    Header.Visible = false
+    Content.Visible = false
+    ExtrasContent.Visible = false
+    MiniPanel.Visible = true
+    TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        Size = MIN_PANEL_SIZE,
+    }):Play()
+    MainFrame.Draggable = true
+end
+
+function restaurar()
+    isMinimized = false
+    TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        Size = NORMAL_SIZE,
+    }):Play()
+    MiniPanel.Visible = false
+    Header.Visible = true
+    Content.Visible = true
+    MainFrame.Draggable = LockButton.Text == "🔓"
+end
 
 MinButton.MouseButton1Click:Connect(function()
-    if isMinimized then
-        TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            Size = NORMAL_SIZE,
-        }):Play()
-        Content.Visible = true
-        MinButton.Text = "−"
-        isMinimized = false
-    else
-        TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            Size = MIN_SIZE,
-        }):Play()
-        Content.Visible = false
-        MinButton.Text = "+"
-        isMinimized = true
-    end
+    if isMinimized then restaurar() else minimizar() end
+end)
+
+MiniPanel.MouseButton1Click:Connect(function()
+    if isMinimized then restaurar() end
 end)
 
 MinButton.MouseEnter:Connect(function()
@@ -407,6 +525,13 @@ MinButton.MouseLeave:Connect(function()
     TweenService:Create(MinButton, TweenInfo.new(0.15), {
         BackgroundColor3 = Color3.fromRGB(35, 20, 55),
     }):Play()
+end)
+
+MiniPanel.MouseEnter:Connect(function()
+    TweenService:Create(MiniIcon, TweenInfo.new(0.15), { TextSize = 40 }):Play()
+end)
+MiniPanel.MouseLeave:Connect(function()
+    TweenService:Create(MiniIcon, TweenInfo.new(0.15), { TextSize = 32 }):Play()
 end)-- ============================================================
 -- AETHER HUB - PARTE 3/4
 -- Gojo 0.2 | Focus | Fly
@@ -605,7 +730,7 @@ FlyBtn.MouseButton1Click:Connect(function()
     end
 end)-- ============================================================
 -- AETHER HUB - PARTE 4/4
--- Bypass | Key | Animações | Atalho | Limpeza
+-- Bypass | Extras | Key | Animações | Atalho | Limpeza
 -- ============================================================
 
 -- BYPASS
@@ -625,7 +750,6 @@ BypassBtn.MouseButton1Click:Connect(function()
     BypassAtivo = true
     setLinhaAtiva(BypassBtn, BypassNome, true)
 
-    -- AUTO BYPASS
     local AutoBypassBtn, AutoNome = criarLinha("🛡️ Auto Bypass", 5)
     AutoBypassBtn.Parent.Name = "AutoBypassRow"
 
@@ -696,7 +820,6 @@ BypassBtn.MouseButton1Click:Connect(function()
         end)
     end)
 
-    -- VELOCIDADE
     local VelBtn = criarLinha("🚀 Velocidade: " .. velocidadesBypass[velocidadeAtual].nome, 6)
     VelBtn.Parent.Name = "VelocidadeRow"
 
@@ -707,7 +830,25 @@ BypassBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
--- SISTEMA DE KEY
+-- BOTÃO EXTRAS
+local ExtrasBtn, ExtrasNome = criarLinha("➕ Extras", 99)
+
+ExtrasBtn.MouseButton1Click:Connect(function()
+    Content.Visible = false
+    ExtrasContent.Visible = true
+end)
+
+BackBtn.MouseButton1Click:Connect(function()
+    ExtrasContent.Visible = false
+    Content.Visible = true
+end)
+
+BackBtn.MouseEnter:Connect(function() BackBtn.TextColor3 = COR_TEXTO end)
+BackBtn.MouseLeave:Connect(function() BackBtn.TextColor3 = PurpleColors[1] end)
+
+-- ============================================================
+-- 🔐 SISTEMA DE KEY
+-- ============================================================
 local KeyGui = Instance.new("ScreenGui")
 KeyGui.Name = "AetherKeyGui"
 KeyGui.ResetOnSpawn = false
@@ -805,16 +946,18 @@ task.spawn(function()
         local nextColor = PurpleColors[currentColorIndex]
         local ti = TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
 
-        TweenService:Create(MainStroke,    ti, { Color = nextColor }):Play()
-        TweenService:Create(LogoStroke,    ti, { Color = nextColor }):Play()
-        TweenService:Create(Title,         ti, { TextColor3 = nextColor }):Play()
-        TweenService:Create(MinButton,     ti, { TextColor3 = nextColor }):Play()
-        TweenService:Create(MinStroke,     ti, { Color = nextColor }):Play()
-        TweenService:Create(LockButton,    ti, { TextColor3 = nextColor }):Play()
-        TweenService:Create(LockStroke,    ti, { Color = nextColor }):Play()
-        TweenService:Create(ContentStroke, ti, { Color = nextColor }):Play()
-        TweenService:Create(KFS,           ti, { Color = nextColor }):Play()
-        TweenService:Create(SubmitButton,  ti, { BackgroundColor3 = nextColor }):Play()
+        TweenService:Create(MainStroke,     ti, { Color = nextColor }):Play()
+        TweenService:Create(LogoStroke,     ti, { Color = nextColor }):Play()
+        TweenService:Create(Title,          ti, { TextColor3 = nextColor }):Play()
+        TweenService:Create(MinButton,      ti, { TextColor3 = nextColor }):Play()
+        TweenService:Create(MinStroke,      ti, { Color = nextColor }):Play()
+        TweenService:Create(LockButton,     ti, { TextColor3 = nextColor }):Play()
+        TweenService:Create(LockStroke,     ti, { Color = nextColor }):Play()
+        TweenService:Create(ContentStroke,  ti, { Color = nextColor }):Play()
+        TweenService:Create(ExtrasStroke,   ti, { Color = nextColor }):Play()
+        TweenService:Create(MiniIcon,       ti, { TextColor3 = nextColor }):Play()
+        TweenService:Create(KFS,            ti, { Color = nextColor }):Play()
+        TweenService:Create(SubmitButton,   ti, { BackgroundColor3 = nextColor }):Play()
 
         task.wait(1.2)
     end
@@ -824,21 +967,7 @@ end)
 UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == Enum.KeyCode.RightControl then
-        if isMinimized then
-            TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                Size = NORMAL_SIZE,
-            }):Play()
-            Content.Visible = true
-            MinButton.Text = "−"
-            isMinimized = false
-        else
-            TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                Size = MIN_SIZE,
-            }):Play()
-            Content.Visible = false
-            MinButton.Text = "+"
-            isMinimized = true
-        end
+        if isMinimized then restaurar() else minimizar() end
     end
 end)
 
