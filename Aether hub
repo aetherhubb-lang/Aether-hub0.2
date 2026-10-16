@@ -1,43 +1,49 @@
 -- ============================================================
 -- AETHER HUB - PARTE 1/4
+-- Serviços, Paleta, Config, Bypass (vars/funções) e UI Base
 -- ============================================================
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+local Players          = game:GetService("Players")
+local RunService       = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local CoreGui = game:GetService("CoreGui")
-local LocalPlayer = Players.LocalPlayer
-local lp = LocalPlayer
-local Camera = workspace.CurrentCamera
+local TweenService     = game:GetService("TweenService")
+local CoreGui          = game:GetService("CoreGui")
+local LocalPlayer      = Players.LocalPlayer
+local lp               = LocalPlayer
+local Camera           = workspace.CurrentCamera
 
 -- ============================================================
--- CORES (estilo da imagem)
+-- 🎨 PALETA DE ROXOS (animada)
 -- ============================================================
-local CONFIG = {
-    COR_FUNDO        = Color3.fromRGB(10, 3, 20),      -- quase preto, roxo profundo
-    COR_BORDA        = Color3.fromRGB(140, 70, 240),   -- roxo vibrante
-    COR_TEXTO        = Color3.fromRGB(160, 100, 245),  -- roxo texto normal
-    COR_TEXTO_ATIVO  = Color3.fromRGB(220, 180, 255),  -- roxo claro quando ativo
-    COR_SUBTITULO    = Color3.fromRGB(130, 110, 160),  -- cinza/roxo pálido
-    COR_DIVISOR      = Color3.fromRGB(50, 25, 85),     -- divisor escuro
-    COR_ICONE_BG     = Color3.fromRGB(30, 10, 55),
-    TAMANHO_HUB      = UDim2.new(0, 260, 0, 400),
-    KEY_VALIDA       = "teste"
+local PurpleColors = {
+    Color3.fromRGB(190, 150, 255),
+    Color3.fromRGB(140,  80, 230),
+    Color3.fromRGB(180,   0, 255),
+    Color3.fromRGB( 75,  20, 130),
 }
+local currentColorIndex = 1
 
-local Tema = {
-    card  = CONFIG.COR_FUNDO,
-    texto = CONFIG.COR_TEXTO,
-    borda = CONFIG.COR_BORDA
-}
+local COR_FUNDO     = Color3.fromRGB(20, 15, 30)
+local COR_HEADER    = Color3.fromRGB(25, 18, 40)
+local COR_CONTEUDO  = Color3.fromRGB(18, 12, 28)
+local COR_TEXTO     = Color3.fromRGB(200, 170, 255)
+local COR_TEXTO_OFF = Color3.fromRGB(150, 120, 200)
+local COR_DIVISOR   = Color3.fromRGB(45, 25, 75)
+
+-- ============================================================
+-- 📐 TAMANHOS
+-- ============================================================
+local NORMAL_SIZE = UDim2.new(0, 420, 0, 340)
+local NORMAL_POS  = UDim2.new(0.5, -210, 0.5, -170)
+local MIN_SIZE    = UDim2.new(0, 420, 0, 55)
+
+local KEY_VALIDA  = "teste"
 
 -- ============================================================
 -- ESTADO
 -- ============================================================
 local Estado = {
     HubAberto = true,
-    Arrastando = true,
     GojoAtivo = false,
     FlyAtivo = false,
     FocusAtivo = false,
@@ -47,12 +53,12 @@ local Estado = {
 }
 
 -- ============================================================
--- BYPASS (vars + funções)
+-- BYPASS: variáveis e funções
 -- ============================================================
 local autoBypassActive = false
-local velocidadeAtual = 2
-local alturaSubida = 70
-local distanciaBorda = 1.5
+local velocidadeAtual  = 2
+local alturaSubida     = 70
+local distanciaBorda   = 1.5
 
 local velocidadesBypass = {
     {nome = "Lento",  mult = 1.5},
@@ -88,6 +94,7 @@ local function flyProVoid()
     if not hrp or not hum then return false end
     local bordaAlvo = encontrarBordaMaisProxima()
     if not bordaAlvo then return false end
+
     local mult = velocidadesBypass[velocidadeAtual].mult
     local og, os, oj = workspace.Gravity, hum.WalkSpeed, hum.JumpPower
     workspace.Gravity = 0; hum.WalkSpeed = 6; hum.JumpPower = 0
@@ -111,241 +118,301 @@ local function flyProVoid()
 end
 
 -- ============================================================
--- SCREENGUI
+-- 🖼️ GUI PRINCIPAL
 -- ============================================================
+if CoreGui:FindFirstChild("AetherHub") then
+    CoreGui.AetherHub:Destroy()
+end
+
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "AetherHubGui"
+ScreenGui.Name = "AetherHub"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
 pcall(function()
-    if gethui then ScreenGui.Parent = gethui() else ScreenGui.Parent = CoreGui end
+    if gethui then
+        ScreenGui.Parent = gethui()
+    else
+        ScreenGui.Parent = CoreGui
+    end
 end)
 if not ScreenGui.Parent then
     ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-end-- ============================================================
--- AETHER HUB - PARTE 2/4
--- Frame Principal + Header + criarLinha
--- ============================================================
+end
 
+-- ============================================================
+-- 📦 CONTAINER PRINCIPAL
+-- ============================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = CONFIG.TAMANHO_HUB
-MainFrame.Position = UDim2.new(0.5, -130, 0.5, -200)
-MainFrame.BackgroundColor3 = CONFIG.COR_FUNDO
+MainFrame.Size = NORMAL_SIZE
+MainFrame.Position = NORMAL_POS
+MainFrame.BackgroundColor3 = COR_FUNDO
 MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 14)
+MainCorner.CornerRadius = UDim.new(0, 12)
 MainCorner.Parent = MainFrame
 
 local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = CONFIG.COR_BORDA
 MainStroke.Thickness = 2
-MainStroke.Transparency = 0.15
+MainStroke.Color = PurpleColors[1]
+MainStroke.Transparency = 0.2
+MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 MainStroke.Parent = MainFrame
 
--- Glow externo (efeito neon)
-local Glow = Instance.new("UIStroke")
-Glow.Color = CONFIG.COR_BORDA
-Glow.Thickness = 6
-Glow.Transparency = 0.85
-Glow.Parent = MainFrame
+local MainGradient = Instance.new("UIGradient")
+MainGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0.0, Color3.fromRGB(30, 20, 45)),
+    ColorSequenceKeypoint.new(1.0, Color3.fromRGB(15, 10, 25)),
+})
+MainGradient.Rotation = 45
+MainGradient.Parent = MainFrame
 
 -- ============================================================
--- HEADER
+-- 🌈 HEADER
 -- ============================================================
 local Header = Instance.new("Frame")
 Header.Name = "Header"
-Header.Size = UDim2.new(1, 0, 0, 70)
-Header.BackgroundTransparency = 1
+Header.Size = UDim2.new(1, 0, 0, 55)
+Header.Position = UDim2.new(0, 0, 0, 0)
+Header.BackgroundColor3 = COR_HEADER
+Header.BorderSizePixel = 0
 Header.Parent = MainFrame
 
--- Ícone (quadrado arredondado com glow)
-local Icon = Instance.new("Frame")
-Icon.Size = UDim2.new(0, 42, 0, 42)
-Icon.Position = UDim2.new(0, 14, 0, 14)
-Icon.BackgroundColor3 = CONFIG.COR_ICONE_BG
-Icon.BorderSizePixel = 0
-Icon.Parent = Header
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 12)
+HeaderCorner.Parent = Header
 
-local IconCorner = Instance.new("UICorner")
-IconCorner.CornerRadius = UDim.new(0, 10)
-IconCorner.Parent = Icon
+local HeaderFix = Instance.new("Frame")
+HeaderFix.Size = UDim2.new(1, 0, 0, 12)
+HeaderFix.Position = UDim2.new(0, 0, 1, -12)
+HeaderFix.BackgroundColor3 = COR_HEADER
+HeaderFix.BorderSizePixel = 0
+HeaderFix.Parent = Header
 
-local IconStroke = Instance.new("UIStroke")
-IconStroke.Color = CONFIG.COR_BORDA
-IconStroke.Thickness = 1.5
-IconStroke.Parent = Icon
+local HeaderGradient = Instance.new("UIGradient")
+HeaderGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0.0, Color3.fromRGB(40, 25, 60)),
+    ColorSequenceKeypoint.new(1.0, Color3.fromRGB(20, 12, 35)),
+})
+HeaderGradient.Rotation = 90
+HeaderGradient.Parent = Header
 
--- Letra "A" dentro do ícone
-local IconText = Instance.new("TextLabel")
-IconText.Size = UDim2.new(1, 0, 1, 0)
-IconText.BackgroundTransparency = 1
-IconText.Text = "A"
-IconText.TextColor3 = CONFIG.COR_BORDA
-IconText.TextSize = 22
-IconText.Font = Enum.Font.GothamBold
-IconText.Parent = Icon
+-- LOGO
+local LogoImage = Instance.new("ImageLabel")
+LogoImage.Name = "Logo"
+LogoImage.Size = UDim2.new(0, 40, 0, 40)
+LogoImage.Position = UDim2.new(0, 12, 0.5, -20)
+LogoImage.BackgroundTransparency = 1
+LogoImage.Image = "rbxthumb://type=Asset&id=81063035016540&w=420&h=420"
+LogoImage.Parent = Header
 
--- Título
+local LogoCorner = Instance.new("UICorner")
+LogoCorner.CornerRadius = UDim.new(0, 8)
+LogoCorner.Parent = LogoImage
+
+local LogoStroke = Instance.new("UIStroke")
+LogoStroke.Thickness = 2
+LogoStroke.Color = PurpleColors[1]
+LogoStroke.Transparency = 0.1
+LogoStroke.Parent = LogoImage
+
+-- TÍTULO
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -80, 0, 24)
-Title.Position = UDim2.new(0, 66, 0, 16)
+Title.Name = "Title"
+Title.Size = UDim2.new(0, 200, 0, 40)
+Title.Position = UDim2.new(0, 62, 0.5, -20)
 Title.BackgroundTransparency = 1
 Title.Text = "AETHER HUB"
-Title.TextColor3 = CONFIG.COR_BORDA
-Title.TextSize = 18
+Title.TextColor3 = PurpleColors[1]
 Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = Header
 
--- Subtítulo
-local Subtitle = Instance.new("TextLabel")
-Subtitle.Size = UDim2.new(1, -80, 0, 16)
-Subtitle.Position = UDim2.new(0, 66, 0, 38)
-Subtitle.BackgroundTransparency = 1
-Subtitle.Text = "by: atsu"
-Subtitle.TextColor3 = CONFIG.COR_SUBTITULO
-Subtitle.TextSize = 12
-Subtitle.Font = Enum.Font.Gotham
-Subtitle.TextXAlignment = Enum.TextXAlignment.Left
-Subtitle.Parent = Header
+local TitleStroke = Instance.new("UIStroke")
+TitleStroke.Thickness = 1
+TitleStroke.Color = Color3.fromRGB(255, 255, 255)
+TitleStroke.Transparency = 0.7
+TitleStroke.Parent = Title
 
--- Divisor do header
-local HeaderSep = Instance.new("Frame")
-HeaderSep.Size = UDim2.new(0.92, 0, 0, 1)
-HeaderSep.Position = UDim2.new(0.04, 0, 0, 70)
-HeaderSep.BackgroundColor3 = CONFIG.COR_DIVISOR
-HeaderSep.BorderSizePixel = 0
-HeaderSep.Parent = MainFrame
+-- BOTÃO MINIMIZAR
+local MinButton = Instance.new("TextButton")
+MinButton.Name = "MinButton"
+MinButton.Size = UDim2.new(0, 32, 0, 32)
+MinButton.Position = UDim2.new(1, -44, 0.5, -16)
+MinButton.BackgroundColor3 = Color3.fromRGB(35, 20, 55)
+MinButton.Text = "−"
+MinButton.TextColor3 = PurpleColors[1]
+MinButton.Font = Enum.Font.GothamBold
+MinButton.TextSize = 24
+MinButton.AutoButtonColor = false
+MinButton.Parent = Header
 
--- ============================================================
--- BOTÃO MINIMIZAR (esquerda do header - discreto)
--- ============================================================
-local MinimizeButton = Instance.new("TextButton")
-MinimizeButton.Size = UDim2.new(0, 22, 0, 22)
-MinimizeButton.Position = UDim2.new(0, 8, 0, 4)
-MinimizeButton.BackgroundTransparency = 1
-MinimizeButton.TextColor3 = CONFIG.COR_TEXTO
-MinimizeButton.Text = "−"
-MinimizeButton.TextSize = 18
-MinimizeButton.Font = Enum.Font.GothamBold
-MinimizeButton.Parent = Header
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0, 8)
+MinCorner.Parent = MinButton
 
+local MinStroke = Instance.new("UIStroke")
+MinStroke.Thickness = 1.5
+MinStroke.Color = PurpleColors[1]
+MinStroke.Transparency = 0.2
+MinStroke.Parent = MinButton-- ============================================================
+-- AETHER HUB - PARTE 2/4
+-- Cadeado + Conteúdo + criarLinha + Minimizar
 -- ============================================================
--- BOTÃO CADEADO (direita do header - discreto)
--- ============================================================
+
+-- BOTÃO CADEADO
 local LockButton = Instance.new("TextButton")
-LockButton.Size = UDim2.new(0, 22, 0, 22)
-LockButton.Position = UDim2.new(1, -30, 0, 4)
-LockButton.BackgroundTransparency = 1
-LockButton.TextColor3 = CONFIG.COR_TEXTO
+LockButton.Name = "LockButton"
+LockButton.Size = UDim2.new(0, 32, 0, 32)
+LockButton.Position = UDim2.new(1, -82, 0.5, -16)
+LockButton.BackgroundColor3 = Color3.fromRGB(35, 20, 55)
 LockButton.Text = "🔓"
-LockButton.TextSize = 14
+LockButton.TextColor3 = PurpleColors[1]
 LockButton.Font = Enum.Font.GothamBold
+LockButton.TextSize = 16
+LockButton.AutoButtonColor = false
 LockButton.Parent = Header
 
--- ============================================================
--- CONTEÚDO (ScrollingFrame)
--- ============================================================
-local ContentFrame = Instance.new("ScrollingFrame")
-ContentFrame.Name = "ContentFrame"
-ContentFrame.Size = UDim2.new(1, -16, 1, -86)
-ContentFrame.Position = UDim2.new(0, 8, 0, 78)
-ContentFrame.BackgroundTransparency = 1
-ContentFrame.BorderSizePixel = 0
-ContentFrame.ScrollBarThickness = 3
-ContentFrame.ScrollBarImageColor3 = CONFIG.COR_BORDA
-ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-ContentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-ContentFrame.Parent = MainFrame
+local LockCorner = Instance.new("UICorner")
+LockCorner.CornerRadius = UDim.new(0, 8)
+LockCorner.Parent = LockButton
+
+local LockStroke = Instance.new("UIStroke")
+LockStroke.Thickness = 1.5
+LockStroke.Color = PurpleColors[1]
+LockStroke.Transparency = 0.2
+LockStroke.Parent = LockButton
+
+-- ÁREA DE CONTEÚDO
+local Content = Instance.new("ScrollingFrame")
+Content.Name = "Content"
+Content.Size = UDim2.new(1, -20, 1, -75)
+Content.Position = UDim2.new(0, 10, 0, 65)
+Content.BackgroundColor3 = COR_CONTEUDO
+Content.BorderSizePixel = 0
+Content.ScrollBarThickness = 3
+Content.ScrollBarImageColor3 = PurpleColors[1]
+Content.CanvasSize = UDim2.new(0, 0, 0, 0)
+Content.AutomaticCanvasSize = Enum.AutomaticSize.Y
+Content.Parent = MainFrame
+
+local ContentCorner = Instance.new("UICorner")
+ContentCorner.CornerRadius = UDim.new(0, 8)
+ContentCorner.Parent = Content
+
+local ContentStroke = Instance.new("UIStroke")
+ContentStroke.Thickness = 1
+ContentStroke.Color = PurpleColors[1]
+ContentStroke.Transparency = 0.6
+ContentStroke.Parent = Content
 
 local ContentLayout = Instance.new("UIListLayout")
 ContentLayout.Padding = UDim.new(0, 0)
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-ContentLayout.Parent = ContentFrame
+ContentLayout.Parent = Content
 
--- ============================================================
--- FUNÇÃO: criar linha (estilo da imagem)
--- ============================================================
+-- FUNÇÃO criarLinha
 local function criarLinha(nomeBase, layoutOrder)
     local row = Instance.new("Frame")
     row.Name = nomeBase .. "Row"
     row.Size = UDim2.new(1, 0, 0, 42)
     row.BackgroundTransparency = 1
     row.LayoutOrder = layoutOrder or 99
-    row.Parent = ContentFrame
+    row.Parent = Content
 
     local btn = Instance.new("TextButton")
     btn.Name = nomeBase .. "Button"
     btn.Size = UDim2.new(1, 0, 1, -1)
     btn.BackgroundTransparency = 1
     btn.Text = nomeBase .. ": OFF"
-    btn.TextColor3 = CONFIG.COR_TEXTO
+    btn.TextColor3 = COR_TEXTO_OFF
     btn.TextSize = 14
     btn.Font = Enum.Font.GothamBold
     btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
     btn.Parent = row
 
     local div = Instance.new("Frame")
     div.Size = UDim2.new(0.92, 0, 0, 1)
     div.Position = UDim2.new(0.04, 0, 1, -1)
-    div.BackgroundColor3 = CONFIG.COR_DIVISOR
+    div.BackgroundColor3 = COR_DIVISOR
     div.BorderSizePixel = 0
     div.Parent = row
 
-    -- Hover
     btn.MouseEnter:Connect(function()
         if not btn:GetAttribute("ativo") then
-            btn.TextColor3 = CONFIG.COR_TEXTO_ATIVO
+            btn.TextColor3 = COR_TEXTO
         end
     end)
     btn.MouseLeave:Connect(function()
         if not btn:GetAttribute("ativo") then
-            btn.TextColor3 = CONFIG.COR_TEXTO
+            btn.TextColor3 = COR_TEXTO_OFF
         end
     end)
 
     return btn, nomeBase
 end
 
--- Helper: marcar ativo/desativado
 local function setLinhaAtiva(btn, nomeBase, ativo)
     btn:SetAttribute("ativo", ativo)
     btn.Text = nomeBase .. (ativo and ": ON" or ": OFF")
-    btn.TextColor3 = ativo and CONFIG.COR_TEXTO_ATIVO or CONFIG.COR_TEXTO
+    if ativo then
+        btn.TextColor3 = PurpleColors[1]
+    else
+        btn.TextColor3 = COR_TEXTO_OFF
+    end
 end
 
--- Lógica Cadeado / Minimizar
+-- LÓGICA CADEADO
 LockButton.MouseButton1Click:Connect(function()
-    Estado.Arrastando = not Estado.Arrastando
-    MainFrame.Draggable = Estado.Arrastando
-    LockButton.Text = Estado.Arrastando and "🔓" or "🔒"
+    MainFrame.Draggable = not MainFrame.Draggable
+    LockButton.Text = MainFrame.Draggable and "🔓" or "🔒"
 end)
 
-MinimizeButton.MouseButton1Click:Connect(function()
-    if Estado.HubAberto then
-        ContentFrame.Visible = false
-        HeaderSep.Visible = false
-        MainFrame.Size = UDim2.new(0, 260, 0, 72)
-        MinimizeButton.Text = "+"
-        Estado.HubAberto = false
+-- MINIMIZAR / RESTAURAR
+local isMinimized = false
+
+MinButton.MouseButton1Click:Connect(function()
+    if isMinimized then
+        TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            Size = NORMAL_SIZE,
+        }):Play()
+        Content.Visible = true
+        MinButton.Text = "−"
+        isMinimized = false
     else
-        ContentFrame.Visible = true
-        HeaderSep.Visible = true
-        MainFrame.Size = CONFIG.TAMANHO_HUB
-        MinimizeButton.Text = "−"
-        Estado.HubAberto = true
+        TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            Size = MIN_SIZE,
+        }):Play()
+        Content.Visible = false
+        MinButton.Text = "+"
+        isMinimized = true
     end
+end)
+
+MinButton.MouseEnter:Connect(function()
+    TweenService:Create(MinButton, TweenInfo.new(0.15), {
+        BackgroundColor3 = Color3.fromRGB(55, 30, 85),
+    }):Play()
+end)
+MinButton.MouseLeave:Connect(function()
+    TweenService:Create(MinButton, TweenInfo.new(0.15), {
+        BackgroundColor3 = Color3.fromRGB(35, 20, 55),
+    }):Play()
 end)-- ============================================================
 -- AETHER HUB - PARTE 3/4
 -- Gojo 0.2 | Focus | Fly
 -- ============================================================
 
--- ================= GOJO 0.2 =================
+-- GOJO 0.2
 local GojoBtn, GojoNome = criarLinha("Gojo 0.2", 1)
 local indiceGojo = 1
 
@@ -390,7 +457,7 @@ GojoBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ================= FOCUS =================
+-- FOCUS
 local FocusBtn, FocusNome = criarLinha("Focus", 2)
 
 FocusBtn.MouseButton1Click:Connect(function()
@@ -433,7 +500,7 @@ FocusBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ================= FLY =================
+-- FLY
 local FlyBtn, FlyNome = criarLinha("Fly", 3)
 
 local FlyControlsGui = Instance.new("ScreenGui")
@@ -446,9 +513,9 @@ local function criarSeta(texto, pos, parent)
     local s = Instance.new("TextButton")
     s.Size = UDim2.new(0, 55, 0, 55)
     s.Position = pos
-    s.BackgroundColor3 = Color3.fromRGB(60, 30, 100)
+    s.BackgroundColor3 = Color3.fromRGB(50, 25, 85)
     s.BackgroundTransparency = 0.35
-    s.TextColor3 = CONFIG.COR_TEXTO_ATIVO
+    s.TextColor3 = PurpleColors[1]
     s.Text = texto
     s.TextSize = 24
     s.Font = Enum.Font.GothamBold
@@ -458,9 +525,9 @@ local function criarSeta(texto, pos, parent)
     c.CornerRadius = UDim.new(0, 12)
     c.Parent = s
     local st = Instance.new("UIStroke")
-    st.Color = CONFIG.COR_BORDA
-    st.Thickness = 1
-    st.Transparency = 0.3
+    st.Color = PurpleColors[1]
+    st.Thickness = 1.5
+    st.Transparency = 0.2
     st.Parent = s
     return s
 end
@@ -538,10 +605,10 @@ FlyBtn.MouseButton1Click:Connect(function()
     end
 end)-- ============================================================
 -- AETHER HUB - PARTE 4/4
--- Bypass | Key | Atalho | Limpeza
+-- Bypass | Key | Animações | Atalho | Limpeza
 -- ============================================================
 
--- ================= BYPASS =================
+-- BYPASS
 local BypassBtn, BypassNome = criarLinha("Bypass", 4)
 local BypassAtivo = false
 
@@ -549,9 +616,8 @@ BypassBtn.MouseButton1Click:Connect(function()
     if BypassAtivo then
         setLinhaAtiva(BypassBtn, BypassNome, false)
         BypassAtivo = false
-        -- remove botões extras
-        local a = ContentFrame:FindFirstChild("AutoBypassRow")
-        local v = ContentFrame:FindFirstChild("VelocidadeRow")
+        local a = Content:FindFirstChild("AutoBypassRow")
+        local v = Content:FindFirstChild("VelocidadeRow")
         if a then a:Destroy() end
         if v then v:Destroy() end
         return
@@ -559,9 +625,8 @@ BypassBtn.MouseButton1Click:Connect(function()
     BypassAtivo = true
     setLinhaAtiva(BypassBtn, BypassNome, true)
 
-    -- ===== AUTO BYPASS =====
+    -- AUTO BYPASS
     local AutoBypassBtn, AutoNome = criarLinha("🛡️ Auto Bypass", 5)
-    AutoBypassBtn.Name = "AutoBypassButton"
     AutoBypassBtn.Parent.Name = "AutoBypassRow"
 
     AutoBypassBtn.MouseButton1Click:Connect(function()
@@ -631,9 +696,8 @@ BypassBtn.MouseButton1Click:Connect(function()
         end)
     end)
 
-    -- ===== VELOCIDADE =====
-    local VelBtn, VelNome = criarLinha("🚀 Velocidade: " .. velocidadesBypass[velocidadeAtual].nome, 6)
-    VelBtn.Name = "VelocidadeButton"
+    -- VELOCIDADE
+    local VelBtn = criarLinha("🚀 Velocidade: " .. velocidadesBypass[velocidadeAtual].nome, 6)
     VelBtn.Parent.Name = "VelocidadeRow"
 
     VelBtn.MouseButton1Click:Connect(function()
@@ -643,43 +707,29 @@ BypassBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
--- ============================================================
--- SISTEMA DE KEY (estilo da imagem)
--- ============================================================
+-- SISTEMA DE KEY
 local KeyGui = Instance.new("ScreenGui")
 KeyGui.Name = "AetherKeyGui"
 KeyGui.ResetOnSpawn = false
 KeyGui.Parent = ScreenGui
 
 local KeyFrame = Instance.new("Frame")
-KeyFrame.Size = UDim2.new(0, 360, 0, 230)
-KeyFrame.Position = UDim2.new(0.5, -180, 0.5, -115)
-KeyFrame.BackgroundColor3 = CONFIG.COR_FUNDO
+KeyFrame.Size = UDim2.new(0, 340, 0, 220)
+KeyFrame.Position = UDim2.new(0.5, -170, 0.5, -110)
+KeyFrame.BackgroundColor3 = COR_FUNDO
 KeyFrame.BorderSizePixel = 0
 KeyFrame.Parent = KeyGui
 
-local KFC = Instance.new("UICorner")
-KFC.CornerRadius = UDim.new(0, 14)
-KFC.Parent = KeyFrame
-
+local KFC = Instance.new("UICorner"); KFC.CornerRadius = UDim.new(0, 12); KFC.Parent = KeyFrame
 local KFS = Instance.new("UIStroke")
-KFS.Color = CONFIG.COR_BORDA
-KFS.Thickness = 2
-KFS.Transparency = 0.15
-KFS.Parent = KeyFrame
-
-local KFG = Instance.new("UIStroke")
-KFG.Color = CONFIG.COR_BORDA
-KFG.Thickness = 6
-KFG.Transparency = 0.85
-KFG.Parent = KeyFrame
+KFS.Color = PurpleColors[1]; KFS.Thickness = 2; KFS.Transparency = 0.15; KFS.Parent = KeyFrame
 
 local KeyTitle = Instance.new("TextLabel")
 KeyTitle.Size = UDim2.new(1, 0, 0, 30)
 KeyTitle.Position = UDim2.new(0, 0, 0, 20)
 KeyTitle.BackgroundTransparency = 1
 KeyTitle.Text = "🔐  AETHER HUB  —  KEY"
-KeyTitle.TextColor3 = CONFIG.COR_BORDA
+KeyTitle.TextColor3 = PurpleColors[1]
 KeyTitle.TextSize = 16
 KeyTitle.Font = Enum.Font.GothamBold
 KeyTitle.Parent = KeyFrame
@@ -689,7 +739,7 @@ KeySub.Size = UDim2.new(1, 0, 0, 16)
 KeySub.Position = UDim2.new(0, 0, 0, 50)
 KeySub.BackgroundTransparency = 1
 KeySub.Text = "Insira a key para liberar o Hub"
-KeySub.TextColor3 = CONFIG.COR_SUBTITULO
+KeySub.TextColor3 = Color3.fromRGB(150, 120, 200)
 KeySub.TextSize = 11
 KeySub.Font = Enum.Font.Gotham
 KeySub.Parent = KeyFrame
@@ -697,31 +747,25 @@ KeySub.Parent = KeyFrame
 local KeyInput = Instance.new("TextBox")
 KeyInput.Size = UDim2.new(0.82, 0, 0, 42)
 KeyInput.Position = UDim2.new(0.09, 0, 0, 82)
-KeyInput.BackgroundColor3 = CONFIG.COR_ICONE_BG
-KeyInput.TextColor3 = CONFIG.COR_TEXTO_ATIVO
+KeyInput.BackgroundColor3 = Color3.fromRGB(30, 18, 48)
+KeyInput.TextColor3 = Color3.fromRGB(220, 180, 255)
 KeyInput.Text = ""
 KeyInput.PlaceholderText = "Digite a key..."
-KeyInput.PlaceholderColor3 = CONFIG.COR_SUBTITULO
+KeyInput.PlaceholderColor3 = Color3.fromRGB(130, 100, 180)
 KeyInput.TextSize = 14
 KeyInput.Font = Enum.Font.Gotham
 KeyInput.BorderSizePixel = 0
 KeyInput.ClearTextOnFocus = false
 KeyInput.Parent = KeyFrame
 
-local KIC = Instance.new("UICorner")
-KIC.CornerRadius = UDim.new(0, 8)
-KIC.Parent = KeyInput
-
+local KIC = Instance.new("UICorner"); KIC.CornerRadius = UDim.new(0, 8); KIC.Parent = KeyInput
 local KIS = Instance.new("UIStroke")
-KIS.Color = CONFIG.COR_BORDA
-KIS.Thickness = 1
-KIS.Transparency = 0.4
-KIS.Parent = KeyInput
+KIS.Color = PurpleColors[1]; KIS.Thickness = 1; KIS.Transparency = 0.4; KIS.Parent = KeyInput
 
 local SubmitButton = Instance.new("TextButton")
 SubmitButton.Size = UDim2.new(0.82, 0, 0, 42)
 SubmitButton.Position = UDim2.new(0.09, 0, 0, 140)
-SubmitButton.BackgroundColor3 = CONFIG.COR_BORDA
+SubmitButton.BackgroundColor3 = PurpleColors[2]
 SubmitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 SubmitButton.Text = "VERIFICAR KEY"
 SubmitButton.TextSize = 14
@@ -729,12 +773,10 @@ SubmitButton.Font = Enum.Font.GothamBold
 SubmitButton.BorderSizePixel = 0
 SubmitButton.Parent = KeyFrame
 
-local SBC = Instance.new("UICorner")
-SBC.CornerRadius = UDim.new(0, 8)
-SBC.Parent = SubmitButton
+local SBC = Instance.new("UICorner"); SBC.CornerRadius = UDim.new(0, 8); SBC.Parent = SubmitButton
 
 SubmitButton.MouseButton1Click:Connect(function()
-    if KeyInput.Text == CONFIG.KEY_VALIDA then
+    if KeyInput.Text == KEY_VALIDA then
         KeyGui.Enabled = false
         MainFrame.Visible = true
     else
@@ -747,31 +789,60 @@ end)
 MainFrame.Visible = false
 KeyGui.Enabled = true
 
--- ============================================================
+-- ANIMAÇÃO DE ENTRADA
+MainFrame.Size = UDim2.new(0, 0, 0, 0)
+MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+
+TweenService:Create(MainFrame, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Size = NORMAL_SIZE,
+    Position = NORMAL_POS,
+}):Play()
+
+-- LOOP DE CORES ANIMADAS
+task.spawn(function()
+    while MainFrame.Parent do
+        currentColorIndex = currentColorIndex % #PurpleColors + 1
+        local nextColor = PurpleColors[currentColorIndex]
+        local ti = TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+
+        TweenService:Create(MainStroke,    ti, { Color = nextColor }):Play()
+        TweenService:Create(LogoStroke,    ti, { Color = nextColor }):Play()
+        TweenService:Create(Title,         ti, { TextColor3 = nextColor }):Play()
+        TweenService:Create(MinButton,     ti, { TextColor3 = nextColor }):Play()
+        TweenService:Create(MinStroke,     ti, { Color = nextColor }):Play()
+        TweenService:Create(LockButton,    ti, { TextColor3 = nextColor }):Play()
+        TweenService:Create(LockStroke,    ti, { Color = nextColor }):Play()
+        TweenService:Create(ContentStroke, ti, { Color = nextColor }):Play()
+        TweenService:Create(KFS,           ti, { Color = nextColor }):Play()
+        TweenService:Create(SubmitButton,  ti, { BackgroundColor3 = nextColor }):Play()
+
+        task.wait(1.2)
+    end
+end)
+
 -- ATALHO (RightCtrl)
--- ============================================================
 UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == Enum.KeyCode.RightControl then
-        if Estado.HubAberto then
-            ContentFrame.Visible = false
-            HeaderSep.Visible = false
-            MainFrame.Size = UDim2.new(0, 260, 0, 72)
-            MinimizeButton.Text = "+"
-            Estado.HubAberto = false
+        if isMinimized then
+            TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = NORMAL_SIZE,
+            }):Play()
+            Content.Visible = true
+            MinButton.Text = "−"
+            isMinimized = false
         else
-            ContentFrame.Visible = true
-            HeaderSep.Visible = true
-            MainFrame.Size = CONFIG.TAMANHO_HUB
-            MinimizeButton.Text = "−"
-            Estado.HubAberto = true
+            TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = MIN_SIZE,
+            }):Play()
+            Content.Visible = false
+            MinButton.Text = "+"
+            isMinimized = true
         end
     end
 end)
 
--- ============================================================
 -- LIMPEZA
--- ============================================================
 local function limpar()
     for _, c in pairs(Estado.Conexoes) do pcall(function() c:Disconnect() end) end
     Estado.Conexoes = {}
@@ -780,4 +851,4 @@ local function limpar()
     pcall(function() ScreenGui:Destroy() end)
 end
 
-print("[Aether Hub] Script carregado! Key: teste")
+print("🌌 AETHER HUB carregado! Key: teste")
