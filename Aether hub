@@ -1,6 +1,6 @@
 -- ============================================================
 -- AETHER HUB - PARTE 1/4
--- Serviços, Configurações, Estado e ScreenGui Principal
+-- Serviços, Config, Tema, Estado, Bypass (vars + funções), ScreenGui
 -- ============================================================
 
 -- SERVIÇOS
@@ -10,6 +10,7 @@ local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
+local lp = LocalPlayer -- alias usado pelo bypass
 local Camera = workspace.CurrentCamera
 
 -- ============================================================
@@ -25,6 +26,14 @@ local CONFIG = {
     KEY_VALIDA       = "teste"
 }
 
+-- Tema (compatibilidade com o código do bypass)
+local Tema = {
+    card   = CONFIG.COR_BOTAO,
+    texto  = CONFIG.COR_TEXTO,
+    borda  = CONFIG.COR_ROXA_CLARA,
+    fundo  = CONFIG.COR_FUNDO_ESCURO
+}
+
 -- ============================================================
 -- ESTADO GLOBAL
 -- ============================================================
@@ -35,11 +44,108 @@ local Estado = {
     FlyAtivo = false,
     FocusAtivo = false,
     Conexoes = {},
-    FocusPart = nil,
-    FocusEnemyPart = nil,
     FlyVelocity = nil,
     FlyGyro = nil
 }
+
+-- ============================================================
+-- VARIÁVEIS DO BYPASS
+-- ============================================================
+local autoBypassActive = false
+local velocidadeAtual = 2
+local alturaSubida = 70
+local distanciaBorda = 1.5
+
+local velocidadesBypass = {
+    {nome = "Lento",  mult = 1.5},
+    {nome = "Normal", mult = 1.0},
+    {nome = "Rapido", mult = 0.7},
+    {nome = "Turbo",  mult = 0.4}
+}
+
+local bordas = {
+    {nome = "Norte", pos = Vector3.new(-16, 62, -347)},
+    {nome = "Sul",   pos = Vector3.new(14, 63, 623)},
+    {nome = "Leste", pos = Vector3.new(348, 62, 12)},
+    {nome = "Oeste", pos = Vector3.new(-347, 62, 12)}
+}
+
+-- FUNÇÃO: Achar borda mais próxima
+local function encontrarBordaMaisProxima()
+    local char = lp.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+
+    local minhaPos = hrp.Position
+    local maisProxima = nil
+    local menorDist = math.huge
+
+    for _, borda in pairs(bordas) do
+        local dist = (minhaPos - borda.pos).Magnitude
+        if dist < menorDist then
+            menorDist = dist
+            maisProxima = borda
+        end
+    end
+
+    return maisProxima
+end
+
+-- FUNÇÃO: Voa pro void
+local function flyProVoid()
+    local char = lp.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return false end
+
+    local bordaAlvo = encontrarBordaMaisProxima()
+    if not bordaAlvo then return false end
+
+    local mult = velocidadesBypass[velocidadeAtual].mult
+
+    local originalGravity = workspace.Gravity
+    local originalSpeed = hum.WalkSpeed
+    local originalJump = hum.JumpPower
+
+    workspace.Gravity = 0
+    hum.WalkSpeed = 6
+    hum.JumpPower = 0
+
+    local startPos = hrp.Position
+    local tweenSubir = TweenService:Create(
+        hrp,
+        TweenInfo.new(0.5 * mult, Enum.EasingStyle.Linear),
+        {CFrame = CFrame.new(startPos.X, startPos.Y + alturaSubida, startPos.Z)}
+    )
+    tweenSubir:Play()
+    task.wait(0.6 * mult)
+
+    local posAtual = hrp.Position
+    local destino = Vector3.new(
+        bordaAlvo.pos.X * distanciaBorda,
+        posAtual.Y,
+        bordaAlvo.pos.Z * distanciaBorda
+    )
+    local tweenLado = TweenService:Create(
+        hrp,
+        TweenInfo.new(2.5 * mult, Enum.EasingStyle.Linear),
+        {CFrame = CFrame.new(destino)}
+    )
+    tweenLado:Play()
+    task.wait(2.7 * mult)
+
+    workspace.Gravity = originalGravity
+    hum.WalkSpeed = originalSpeed
+    hum.JumpPower = originalJump
+
+    local c3 = lp.Character
+    local h3 = c3 and c3:FindFirstChild("HumanoidRootPart")
+    if h3 then
+        h3.CFrame = CFrame.new(h3.Position.X, -500, h3.Position.Z)
+    end
+
+    return true
+end
 
 -- ============================================================
 -- SCREENGUI PRINCIPAL
@@ -59,11 +165,12 @@ end)
 
 if not ScreenGui.Parent then
     ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-end
+end-- ============================================================
+-- AETHER HUB - PARTE 2/4
+-- Frame Principal + Barra de Título + Controles + criarBotao
+-- ============================================================
 
--- ============================================================
 -- FRAME PRINCIPAL
--- ============================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = CONFIG.TAMANHO_HUB
@@ -108,7 +215,7 @@ TitleLabel.TextScaled = true
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.Parent = TitleBar
 
--- BOTÃO CADEADO (canto direito)
+-- BOTÃO CADEADO
 local LockButton = Instance.new("TextButton")
 LockButton.Name = "LockButton"
 LockButton.Size = UDim2.new(0, 26, 0, 26)
@@ -124,7 +231,7 @@ local LockCorner = Instance.new("UICorner")
 LockCorner.CornerRadius = UDim.new(0, 6)
 LockCorner.Parent = LockButton
 
--- BOTÃO MINIMIZAR (canto esquerdo)
+-- BOTÃO MINIMIZAR
 local MinimizeButton = Instance.new("TextButton")
 MinimizeButton.Name = "MinimizeButton"
 MinimizeButton.Size = UDim2.new(0, 26, 0, 26)
@@ -140,12 +247,17 @@ local MinCorner = Instance.new("UICorner")
 MinCorner.CornerRadius = UDim.new(0, 6)
 MinCorner.Parent = MinimizeButton
 
--- CONTAINER DE CONTEÚDO
-local ContentFrame = Instance.new("Frame")
+-- CONTAINER DE CONTEÚDO (scroll para caber mais botões)
+local ContentFrame = Instance.new("ScrollingFrame")
 ContentFrame.Name = "ContentFrame"
 ContentFrame.Size = UDim2.new(1, -20, 1, -56)
 ContentFrame.Position = UDim2.new(0, 10, 0, 46)
 ContentFrame.BackgroundTransparency = 1
+ContentFrame.BorderSizePixel = 0
+ContentFrame.ScrollBarThickness = 4
+ContentFrame.ScrollBarImageColor3 = CONFIG.COR_ROXA_CLARA
+ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ContentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 ContentFrame.Parent = MainFrame
 
 local ContentLayout = Instance.new("UIListLayout")
@@ -153,18 +265,18 @@ ContentLayout.Padding = UDim.new(0, 8)
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ContentLayout.Parent = ContentFrame
 
--- FUNÇÃO CRIAR BOTÃO
+-- FUNÇÃO CRIAR BOTÃO (padrão Hub)
 local function criarBotao(nome, layoutOrder)
     local btn = Instance.new("TextButton")
     btn.Name = nome .. "Button"
-    btn.Size = UDim2.new(1, 0, 0, 38)
+    btn.Size = UDim2.new(1, -6, 0, 38)
     btn.BackgroundColor3 = CONFIG.COR_BOTAO
     btn.TextColor3 = CONFIG.COR_TEXTO
     btn.Text = nome
     btn.TextScaled = true
     btn.Font = Enum.Font.Gotham
     btn.BorderSizePixel = 0
-    btn.LayoutOrder = layoutOrder
+    btn.LayoutOrder = layoutOrder or 99
     btn.Parent = ContentFrame
 
     local corner = Instance.new("UICorner")
@@ -200,10 +312,11 @@ MinimizeButton.MouseButton1Click:Connect(function()
         Estado.HubAberto = true
     end
 end)-- ============================================================
--- AETHER HUB - PARTE 2/4
--- Botão 1: Gojo 0.2
+-- AETHER HUB - PARTE 3/4
+-- Gojo 0.2 | Focus | Fly
 -- ============================================================
 
+-- ================= GOJO 0.2 =================
 local GojoButton = criarBotao("Gojo 0.2", 1)
 local indiceGojo = 1
 
@@ -217,13 +330,11 @@ GojoButton.MouseButton1Click:Connect(function()
 
         local conexaoGojo = RunService.Heartbeat:Connect(function()
             if not Estado.GojoAtivo then return end
-
             local char = LocalPlayer.Character
             if not char then return end
             local hrp = char:FindFirstChild("HumanoidRootPart")
             if not hrp then return end
 
-            -- Monta lista de jogadores VIVOS (exceto eu)
             local vivos = {}
             for _, jogador in pairs(Players:GetPlayers()) do
                 if jogador ~= LocalPlayer then
@@ -241,7 +352,6 @@ GojoButton.MouseButton1Click:Connect(function()
             if #vivos == 0 then return end
             if indiceGojo > #vivos then indiceGojo = 1 end
 
-            -- Teleporta para o jogador ATUAL da lista
             local alvo = vivos[indiceGojo]
             if alvo then
                 pcall(function()
@@ -249,23 +359,17 @@ GojoButton.MouseButton1Click:Connect(function()
                     hrp.Velocity = Vector3.zero
                 end)
             end
-
-            -- Avança o índice (1 jogador por frame)
             indiceGojo = indiceGojo + 1
         end)
-
         table.insert(Estado.Conexoes, conexaoGojo)
     else
         GojoButton.BackgroundColor3 = CONFIG.COR_BOTAO
         GojoButton.Text = "Gojo 0.2"
         indiceGojo = 1
     end
-end)-- ============================================================
--- AETHER HUB - PARTE 3/4
--- Botão 2: Focus | Botão 3: Fly
--- ============================================================
+end)
 
--- ================= FOCUS (PERSONAGEM ORBITANDO INIMIGO) =================
+-- ================= FOCUS (PERSONAGEM ORBITANDO) =================
 local FocusButton = criarBotao("Focus", 2)
 
 FocusButton.MouseButton1Click:Connect(function()
@@ -274,21 +378,17 @@ FocusButton.MouseButton1Click:Connect(function()
     if Estado.FocusAtivo then
         FocusButton.BackgroundColor3 = CONFIG.COR_BOTAO_ATIVO
         FocusButton.Text = "Focus ✓"
-
         local angulo = 0
 
         local conexaoFocus = RunService.Heartbeat:Connect(function(dt)
             if not Estado.FocusAtivo then return end
-
             local char = LocalPlayer.Character
             if not char then return end
             local hrp = char:FindFirstChild("HumanoidRootPart")
             if not hrp then return end
 
-            -- Achar inimigo vivo mais próximo
             local alvoProximo = nil
             local menorDist = math.huge
-
             for _, jogador in pairs(Players:GetPlayers()) do
                 if jogador ~= LocalPlayer then
                     local charAlvo = jogador.Character
@@ -307,24 +407,17 @@ FocusButton.MouseButton1Click:Connect(function()
             end
 
             if alvoProximo then
-                -- Avança o ângulo (velocidade da órbita)
                 angulo = angulo + dt * 6
-
-                -- Calcula posição orbital em volta do inimigo
                 local raio = 5
                 local offset = Vector3.new(
                     math.cos(angulo) * raio,
                     3,
                     math.sin(angulo) * raio
                 )
-
                 local destino = alvoProximo.Position + offset
-
-                -- Seu personagem orbita e SEMPRE olha pro inimigo
                 hrp.CFrame = CFrame.new(destino, alvoProximo.Position)
             end
         end)
-
         table.insert(Estado.Conexoes, conexaoFocus)
     else
         FocusButton.BackgroundColor3 = CONFIG.COR_BOTAO
@@ -353,15 +446,12 @@ local function criarSeta(texto, posicao, parent)
     seta.Font = Enum.Font.GothamBold
     seta.BorderSizePixel = 0
     seta.Parent = parent
-
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 12)
     c.Parent = seta
-
     return seta
 end
 
--- Setas ESQUERDA (movimento horizontal/vertical)
 local SetasEsquerda = Instance.new("Frame")
 SetasEsquerda.Size = UDim2.new(0, 180, 0, 180)
 SetasEsquerda.Position = UDim2.new(0, 20, 0.5, -90)
@@ -373,7 +463,6 @@ local SetaBaixo    = criarSeta("⬇", UDim2.new(0, 62, 0, 125), SetasEsquerda)
 local SetaEsquerda = criarSeta("⬅", UDim2.new(0, 0,  0, 62),  SetasEsquerda)
 local SetaDireita  = criarSeta("➡", UDim2.new(0, 125,0, 62),  SetasEsquerda)
 
--- Setas DIREITA (subir/descer)
 local SetasDireita = Instance.new("Frame")
 SetasDireita.Size = UDim2.new(0, 60, 0, 130)
 SetasDireita.Position = UDim2.new(1, -80, 0.5, -65)
@@ -383,10 +472,7 @@ SetasDireita.Parent = FlyControlsGui
 local SetaSubir  = criarSeta("▲", UDim2.new(0, 0, 0, 0),  SetasDireita)
 local SetaDescer = criarSeta("▼", UDim2.new(0, 0, 0, 70), SetasDireita)
 
-local DirecaoFly = {
-    Cima=false, Baixo=false, Esquerda=false, Direita=false,
-    Subir=false, Descer=false
-}
+local DirecaoFly = {Cima=false, Baixo=false, Esquerda=false, Direita=false, Subir=false, Descer=false}
 
 local function conectarSeta(btn, tecla)
     btn.MouseButton1Down:Connect(function() DirecaoFly[tecla] = true end)
@@ -427,10 +513,8 @@ FlyButton.MouseButton1Click:Connect(function()
 
         local conexaoFly = RunService.RenderStepped:Connect(function()
             if not Estado.FlyAtivo or not hrp or not hrp.Parent then return end
-
             local moveDir = Vector3.zero
             local velocidade = 80
-
             if DirecaoFly.Cima     then moveDir = moveDir + Camera.CFrame.LookVector end
             if DirecaoFly.Baixo    then moveDir = moveDir - Camera.CFrame.LookVector end
             if DirecaoFly.Esquerda then moveDir = moveDir - Camera.CFrame.RightVector end
@@ -438,29 +522,23 @@ FlyButton.MouseButton1Click:Connect(function()
             if DirecaoFly.Subir    then moveDir = moveDir + Vector3.new(0, 1, 0) end
             if DirecaoFly.Descer   then moveDir = moveDir - Vector3.new(0, 1, 0) end
 
-            if Estado.FlyVelocity then
-                Estado.FlyVelocity.Velocity = moveDir * velocidade
-            end
-            if Estado.FlyGyro then
-                Estado.FlyGyro.CFrame = Camera.CFrame
-            end
+            if Estado.FlyVelocity then Estado.FlyVelocity.Velocity = moveDir * velocidade end
+            if Estado.FlyGyro then Estado.FlyGyro.CFrame = Camera.CFrame end
         end)
-
         table.insert(Estado.Conexoes, conexaoFly)
     else
         FlyButton.BackgroundColor3 = CONFIG.COR_BOTAO
         FlyButton.Text = "Fly"
         FlyControlsGui.Enabled = false
-
         if Estado.FlyGyro then Estado.FlyGyro:Destroy() Estado.FlyGyro = nil end
         if Estado.FlyVelocity then Estado.FlyVelocity:Destroy() Estado.FlyVelocity = nil end
     end
 end)-- ============================================================
 -- AETHER HUB - PARTE 4/4
--- Botão 4: Bypass | Sistema de Key | Atalho | Limpeza
+-- Bypass (Auto + Velocidade) | Key | Atalho | Limpeza
 -- ============================================================
 
--- ================= BOTÃO 4: BYPASS =================
+-- ================= BOTÃO 4: ATIVAR BYPASS =================
 local BypassButton = criarBotao("Ativar Bypass", 4)
 local BypassAtivo = false
 
@@ -470,34 +548,134 @@ BypassButton.MouseButton1Click:Connect(function()
         return
     end
 
-    BypassButton.Text = "Carregando..."
+    BypassAtivo = true
     BypassButton.BackgroundColor3 = CONFIG.COR_BOTAO_ATIVO
+    BypassButton.Text = "Bypass Ativo ✓"
 
-    local sucesso = pcall(function()
-        local resultado = game:HttpGet("https://pastefy.app/n2dI53tm/raw")
-        local bypassFunc, erro = loadstring(resultado)
-        if bypassFunc then
-            bypassFunc()
-            return true
-        else
-            warn("[Aether Hub] Erro ao compilar bypass: " .. tostring(erro))
-            return false
+    -- ========== BOTÃO: AUTO BYPASS ==========
+    local AutoBypassBtn = criarBotao("🛡️ Auto Bypass", 5)
+
+    AutoBypassBtn.MouseButton1Click:Connect(function()
+        if autoBypassActive then
+            autoBypassActive = false
+            AutoBypassBtn.BackgroundColor3 = Tema.card
+            AutoBypassBtn.TextColor3 = Tema.texto
+            AutoBypassBtn.Text = "🛡️ Auto Bypass"
+            return
         end
+
+        autoBypassActive = true
+        AutoBypassBtn.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
+        AutoBypassBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        AutoBypassBtn.Text = "Voando..."
+
+        task.spawn(function()
+            local volta = 0
+            while autoBypassActive do
+                volta = volta + 1
+                AutoBypassBtn.Text = "Voando (v" .. volta .. ")"
+                AutoBypassBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 200)
+
+                flyProVoid()
+                task.wait(2)
+                if not autoBypassActive then break end
+
+                local char = lp.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if not hum or not hrp then
+                    AutoBypassBtn.Text = "Sem char (v" .. volta .. ")"
+                    task.wait(1)
+                    continue
+                end
+
+                local posVoid = hrp.Position
+
+                -- Acha dummy mais próximo
+                local dummyAlvo = nil
+                local menorDist = math.huge
+                for _, obj in pairs(workspace:GetDescendants()) do
+                    if obj:IsA("Model")
+                       and obj:FindFirstChildOfClass("Humanoid")
+                       and obj ~= char
+                       and not Players:GetPlayerFromCharacter(obj) then
+                        local dHum = obj:FindFirstChildOfClass("Humanoid")
+                        local dHrp = obj:FindFirstChild("HumanoidRootPart")
+                        if dHum and dHrp and dHum.Health > 0 then
+                            local dist = (hrp.Position - dHrp.Position).Magnitude
+                            if dist < menorDist then
+                                menorDist = dist
+                                dummyAlvo = dHrp
+                            end
+                        end
+                    end
+                end
+
+                if not dummyAlvo then
+                    AutoBypassBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+                    AutoBypassBtn.Text = "Sem dummy (v" .. volta .. ")"
+                    task.wait(2)
+                else
+                    local posDummy = dummyAlvo.Position
+                    AutoBypassBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+                    AutoBypassBtn.Text = "TP teste (v" .. volta .. ")"
+                    pcall(function()
+                        hrp.CFrame = CFrame.new(posDummy + Vector3.new(0, 3, 0))
+                    end)
+                    task.wait(1.5)
+
+                    local hrpAtual = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+                    if not hrpAtual then
+                        AutoBypassBtn.Text = "Perdeu char (v" .. volta .. ")"
+                        task.wait(1)
+                    else
+                        local posAtual = hrpAtual.Position
+                        local distDummy = (posAtual - posDummy).Magnitude
+                        local distVolta = (posAtual - posVoid).Magnitude
+
+                        if distDummy < 20 then
+                            AutoBypassBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+                            AutoBypassBtn.Text = "✅ OK! (v" .. volta .. ")"
+                            autoBypassActive = false
+                            break
+                        elseif distVolta < 20 then
+                            AutoBypassBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+                            AutoBypassBtn.Text = "❌ Bloqueou (v" .. volta .. ")"
+                            task.wait(1.5)
+                        else
+                            AutoBypassBtn.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
+                            AutoBypassBtn.Text = "⚠️ Outro lugar (v" .. volta .. ")"
+                            task.wait(1.5)
+                        end
+                    end
+                end
+                task.wait(0.5)
+            end
+
+            autoBypassActive = false
+            task.wait(2)
+            AutoBypassBtn.BackgroundColor3 = Tema.card
+            AutoBypassBtn.TextColor3 = Tema.texto
+            AutoBypassBtn.Text = "🛡️ Auto Bypass"
+        end)
     end)
 
-    if sucesso then
-        BypassAtivo = true
-        BypassButton.Text = "Bypass Ativo ✓"
-        BypassButton.BackgroundColor3 = CONFIG.COR_BOTAO_ATIVO
-        print("[Aether Hub] Bypass carregado com sucesso!")
-    else
-        BypassButton.Text = "Falha no Bypass ✗"
-        BypassButton.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
-        warn("[Aether Hub] Falha ao carregar bypass.")
-    end
+    -- ========== BOTÃO: VELOCIDADE ==========
+    local VelocidadeBtn = criarBotao("🚀 Velocidade: " .. velocidadesBypass[velocidadeAtual].nome, 6)
+
+    VelocidadeBtn.MouseButton1Click:Connect(function()
+        velocidadeAtual = velocidadeAtual + 1
+        if velocidadeAtual > #velocidadesBypass then velocidadeAtual = 1 end
+        VelocidadeBtn.Text = "🚀 Velocidade: " .. velocidadesBypass[velocidadeAtual].nome
+        VelocidadeBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+        task.wait(0.2)
+        VelocidadeBtn.BackgroundColor3 = Tema.card
+    end)
 end)
 
--- ================= SISTEMA DE KEY =================
+-- ============================================================
+-- SISTEMA DE KEY
+-- ============================================================
 local KeyGui = Instance.new("ScreenGui")
 KeyGui.Name = "AetherKeyGui"
 KeyGui.ResetOnSpawn = false
@@ -573,11 +751,12 @@ SubmitButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Bloqueia o hub até inserir a key
 MainFrame.Visible = false
 KeyGui.Enabled = true
 
--- ================= ATALHO (RightCtrl) =================
+-- ============================================================
+-- ATALHO (RightCtrl)
+-- ============================================================
 UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == Enum.KeyCode.RightControl then
@@ -595,18 +774,16 @@ UserInputService.InputBegan:Connect(function(input, gp)
     end
 end)
 
--- ================= LIMPEZA =================
+-- ============================================================
+-- LIMPEZA
+-- ============================================================
 local function limpar()
     for _, conexao in pairs(Estado.Conexoes) do
         pcall(function() conexao:Disconnect() end)
     end
     Estado.Conexoes = {}
-
-    if Estado.FocusPart then pcall(function() Estado.FocusPart:Destroy() end) end
-    if Estado.FocusEnemyPart then pcall(function() Estado.FocusEnemyPart:Destroy() end) end
     if Estado.FlyGyro then pcall(function() Estado.FlyGyro:Destroy() end) end
     if Estado.FlyVelocity then pcall(function() Estado.FlyVelocity:Destroy() end) end
-
     pcall(function() ScreenGui:Destroy() end)
 end
 
