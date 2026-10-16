@@ -1,0 +1,561 @@
+-- ============================================================
+-- AETHER HUB - PARTE 1/4
+-- Serviços, Configurações, Estado e Bypass
+-- ============================================================
+
+-- SERVIÇOS
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- ============================================================
+-- CONFIGURAÇÕES
+-- ============================================================
+local CONFIG = {
+    COR_ROXA_CLARA   = Color3.fromRGB(180, 130, 255),
+    COR_FUNDO_ESCURO = Color3.fromRGB(25, 15, 40),
+    COR_TEXTO        = Color3.fromRGB(255, 255, 255),
+    COR_BOTAO        = Color3.fromRGB(60, 40, 90),
+    COR_BOTAO_ATIVO  = Color3.fromRGB(100, 70, 150),
+    TAMANHO_HUB      = UDim2.new(0, 280, 0, 360),
+    KEY_VALIDA       = "teste"
+}
+
+-- ============================================================
+-- ESTADO GLOBAL
+-- ============================================================
+local Estado = {
+    HubAberto = true,
+    Arrastando = true,
+    GojoAtivo = false,
+    FlyAtivo = false,
+    FocusAtivo = false,
+    Conexoes = {},
+    FocusPart = nil,
+    FlyVelocity = nil,
+    FlyGyro = nil
+}
+
+-- ============================================================
+-- BYPASS (pastefy)
+-- ============================================================
+local function carregarBypass()
+    local sucesso, resultado = pcall(function()
+        return game:HttpGet("https://pastefy.app/n2dI53tm/raw")
+    end)
+    if sucesso and resultado then
+        local bypassFunc, erro = loadstring(resultado)
+        if bypassFunc then
+            pcall(bypassFunc)
+            print("[Aether Hub] Bypass carregado com sucesso!")
+        else
+            warn("[Aether Hub] Erro ao compilar bypass: " .. tostring(erro))
+        end
+    else
+        warn("[Aether Hub] Falha ao baixar bypass.")
+    end
+end
+
+carregarBypass()
+
+-- ============================================================
+-- SCREENGUI PRINCIPAL
+-- ============================================================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AetherHubGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+pcall(function()
+    if gethui then
+        ScreenGui.Parent = gethui()
+    else
+        ScreenGui.Parent = CoreGui
+    end
+end)
+
+if not ScreenGui.Parent then
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end-- ============================================================
+-- AETHER HUB - PARTE 2/4
+-- Frame Principal + Barra de Título + Botões de Controle
+-- ============================================================
+
+-- FRAME PRINCIPAL
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = CONFIG.TAMANHO_HUB
+MainFrame.Position = UDim2.new(0.5, -140, 0.5, -180)
+MainFrame.BackgroundColor3 = CONFIG.COR_FUNDO_ESCURO
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = CONFIG.COR_ROXA_CLARA
+UIStroke.Thickness = 2
+UIStroke.Parent = MainFrame
+
+-- BARRA DE TÍTULO
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1, 0, 0, 36)
+TitleBar.Position = UDim2.new(0, 0, 0, 0)
+TitleBar.BackgroundColor3 = CONFIG.COR_ROXA_CLARA
+TitleBar.BackgroundTransparency = 0.8
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 12)
+TitleCorner.Parent = TitleBar
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Size = UDim2.new(0.6, 0, 1, 0)
+TitleLabel.Position = UDim2.new(0.2, 0, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "Aether Hub"
+TitleLabel.TextColor3 = CONFIG.COR_TEXTO
+TitleLabel.TextScaled = true
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Parent = TitleBar
+
+-- BOTÃO CADEADO (direita)
+local LockButton = Instance.new("TextButton")
+LockButton.Name = "LockButton"
+LockButton.Size = UDim2.new(0, 26, 0, 26)
+LockButton.Position = UDim2.new(1, -32, 0, 5)
+LockButton.BackgroundColor3 = CONFIG.COR_BOTAO
+LockButton.TextColor3 = CONFIG.COR_TEXTO
+LockButton.Text = "🔓"
+LockButton.TextScaled = true
+LockButton.BorderSizePixel = 0
+LockButton.Parent = TitleBar
+
+local LockCorner = Instance.new("UICorner")
+LockCorner.CornerRadius = UDim.new(0, 6)
+LockCorner.Parent = LockButton
+
+-- BOTÃO MINIMIZAR (esquerda)
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.Size = UDim2.new(0, 26, 0, 26)
+MinimizeButton.Position = UDim2.new(0, 6, 0, 5)
+MinimizeButton.BackgroundColor3 = CONFIG.COR_BOTAO
+MinimizeButton.TextColor3 = CONFIG.COR_TEXTO
+MinimizeButton.Text = "−"
+MinimizeButton.TextScaled = true
+MinimizeButton.BorderSizePixel = 0
+MinimizeButton.Parent = TitleBar
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0, 6)
+MinCorner.Parent = MinimizeButton
+
+-- CONTAINER DE CONTEÚDO
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Size = UDim2.new(1, -20, 1, -56)
+ContentFrame.Position = UDim2.new(0, 10, 0, 46)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Parent = MainFrame
+
+local ContentLayout = Instance.new("UIListLayout")
+ContentLayout.Padding = UDim.new(0, 8)
+ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ContentLayout.Parent = ContentFrame
+
+-- FUNÇÃO CRIAR BOTÃO
+local function criarBotao(nome, layoutOrder)
+    local btn = Instance.new("TextButton")
+    btn.Name = nome .. "Button"
+    btn.Size = UDim2.new(1, 0, 0, 38)
+    btn.BackgroundColor3 = CONFIG.COR_BOTAO
+    btn.TextColor3 = CONFIG.COR_TEXTO
+    btn.Text = nome
+    btn.TextScaled = true
+    btn.Font = Enum.Font.Gotham
+    btn.BorderSizePixel = 0
+    btn.LayoutOrder = layoutOrder
+    btn.Parent = ContentFrame
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = btn
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = CONFIG.COR_ROXA_CLARA
+    stroke.Thickness = 1
+    stroke.Transparency = 0.5
+    stroke.Parent = btn
+
+    return btn
+end
+
+-- LÓGICA DO CADEADO E MINIMIZAR
+LockButton.MouseButton1Click:Connect(function()
+    Estado.Arrastando = not Estado.Arrastando
+    MainFrame.Draggable = Estado.Arrastando
+    LockButton.Text = Estado.Arrastando and "🔓" or "🔒"
+end)
+
+MinimizeButton.MouseButton1Click:Connect(function()
+    if Estado.HubAberto then
+        ContentFrame.Visible = false
+        MainFrame.Size = UDim2.new(0, 280, 0, 38)
+        MinimizeButton.Text = "+"
+        Estado.HubAberto = false
+    else
+        ContentFrame.Visible = true
+        MainFrame.Size = CONFIG.TAMANHO_HUB
+        MinimizeButton.Text = "−"
+        Estado.HubAberto = true
+    end
+end)-- ============================================================
+-- AETHER HUB - PARTE 3/4
+-- Botões: Gojo 0.2 | Fly | Focus
+-- ============================================================
+
+-- ================= GOJO 0.2 =================
+local GojoButton = criarBotao("Gojo 0.2", 1)
+
+GojoButton.MouseButton1Click:Connect(function()
+    Estado.GojoAtivo = not Estado.GojoAtivo
+
+    if Estado.GojoAtivo then
+        GojoButton.BackgroundColor3 = CONFIG.COR_BOTAO_ATIVO
+        GojoButton.Text = "Gojo 0.2 ✓"
+
+        local conexaoGojo = RunService.Heartbeat:Connect(function()
+            if not Estado.GojoAtivo then return end
+
+            local char = LocalPlayer.Character
+            if not char then return end
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+
+            for _, jogador in pairs(Players:GetPlayers()) do
+                if jogador ~= LocalPlayer then
+                    local charAlvo = jogador.Character
+                    if charAlvo then
+                        local hrpAlvo = charAlvo:FindFirstChild("HumanoidRootPart")
+                        local humAlvo = charAlvo:FindFirstChild("Humanoid")
+                        if hrpAlvo and humAlvo and humAlvo.Health > 0 then
+                            pcall(function()
+                                hrp.CFrame = hrpAlvo.CFrame * CFrame.new(0, 0, 2)
+                            end)
+                        end
+                    end
+                end
+            end
+        end)
+
+        table.insert(Estado.Conexoes, conexaoGojo)
+    else
+        GojoButton.BackgroundColor3 = CONFIG.COR_BOTAO
+        GojoButton.Text = "Gojo 0.2"
+    end
+end)
+
+-- ================= FLY =================
+local FlyButton = criarBotao("Fly", 2)
+
+local FlyControlsGui = Instance.new("ScreenGui")
+FlyControlsGui.Name = "FlyControls"
+FlyControlsGui.ResetOnSpawn = false
+FlyControlsGui.Enabled = false
+FlyControlsGui.Parent = ScreenGui
+
+local function criarSeta(texto, posicao, parent)
+    local seta = Instance.new("TextButton")
+    seta.Size = UDim2.new(0, 55, 0, 55)
+    seta.Position = posicao
+    seta.BackgroundColor3 = Color3.fromRGB(80, 50, 120)
+    seta.BackgroundTransparency = 0.4
+    seta.TextColor3 = Color3.fromRGB(255, 255, 255)
+    seta.Text = texto
+    seta.TextScaled = true
+    seta.Font = Enum.Font.GothamBold
+    seta.BorderSizePixel = 0
+    seta.Parent = parent
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 12)
+    c.Parent = seta
+
+    return seta
+end
+
+-- Setas ESQUERDA
+local SetasEsquerda = Instance.new("Frame")
+SetasEsquerda.Size = UDim2.new(0, 180, 0, 180)
+SetasEsquerda.Position = UDim2.new(0, 20, 0.5, -90)
+SetasEsquerda.BackgroundTransparency = 1
+SetasEsquerda.Parent = FlyControlsGui
+
+local SetaCima     = criarSeta("⬆", UDim2.new(0, 62, 0, 0),   SetasEsquerda)
+local SetaBaixo    = criarSeta("⬇", UDim2.new(0, 62, 0, 125), SetasEsquerda)
+local SetaEsquerda = criarSeta("⬅", UDim2.new(0, 0,  0, 62),  SetasEsquerda)
+local SetaDireita  = criarSeta("➡", UDim2.new(0, 125,0, 62),  SetasEsquerda)
+
+-- Setas DIREITA
+local SetasDireita = Instance.new("Frame")
+SetasDireita.Size = UDim2.new(0, 60, 0, 130)
+SetasDireita.Position = UDim2.new(1, -80, 0.5, -65)
+SetasDireita.BackgroundTransparency = 1
+SetasDireita.Parent = FlyControlsGui
+
+local SetaSubir  = criarSeta("▲", UDim2.new(0, 0, 0, 0),  SetasDireita)
+local SetaDescer = criarSeta("▼", UDim2.new(0, 0, 0, 70), SetasDireita)
+
+local DirecaoFly = {
+    Cima=false, Baixo=false, Esquerda=false, Direita=false,
+    Subir=false, Descer=false
+}
+
+local function conectarSeta(btn, tecla)
+    btn.MouseButton1Down:Connect(function() DirecaoFly[tecla] = true end)
+    btn.MouseButton1Up:Connect(function()   DirecaoFly[tecla] = false end)
+    btn.MouseLeave:Connect(function()       DirecaoFly[tecla] = false end)
+end
+
+conectarSeta(SetaCima, "Cima")
+conectarSeta(SetaBaixo, "Baixo")
+conectarSeta(SetaEsquerda, "Esquerda")
+conectarSeta(SetaDireita, "Direita")
+conectarSeta(SetaSubir, "Subir")
+conectarSeta(SetaDescer, "Descer")
+
+FlyButton.MouseButton1Click:Connect(function()
+    Estado.FlyAtivo = not Estado.FlyAtivo
+
+    if Estado.FlyAtivo then
+        FlyButton.BackgroundColor3 = CONFIG.COR_BOTAO_ATIVO
+        FlyButton.Text = "Fly ✓"
+        FlyControlsGui.Enabled = true
+
+        local char = LocalPlayer.Character
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+
+        Estado.FlyGyro = Instance.new("BodyGyro")
+        Estado.FlyGyro.P = 9e4
+        Estado.FlyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        Estado.FlyGyro.CFrame = hrp.CFrame
+        Estado.FlyGyro.Parent = hrp
+
+        Estado.FlyVelocity = Instance.new("BodyVelocity")
+        Estado.FlyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        Estado.FlyVelocity.Velocity = Vector3.zero
+        Estado.FlyVelocity.Parent = hrp
+
+        local conexaoFly = RunService.RenderStepped:Connect(function()
+            if not Estado.FlyAtivo or not hrp or not hrp.Parent then return end
+
+            local moveDir = Vector3.zero
+            local velocidade = 80
+
+            if DirecaoFly.Cima     then moveDir = moveDir + Camera.CFrame.LookVector end
+            if DirecaoFly.Baixo    then moveDir = moveDir - Camera.CFrame.LookVector end
+            if DirecaoFly.Esquerda then moveDir = moveDir - Camera.CFrame.RightVector end
+            if DirecaoFly.Direita  then moveDir = moveDir + Camera.CFrame.RightVector end
+            if DirecaoFly.Subir    then moveDir = moveDir + Vector3.new(0, 1, 0) end
+            if DirecaoFly.Descer   then moveDir = moveDir - Vector3.new(0, 1, 0) end
+
+            if Estado.FlyVelocity then
+                Estado.FlyVelocity.Velocity = moveDir * velocidade
+            end
+            if Estado.FlyGyro then
+                Estado.FlyGyro.CFrame = Camera.CFrame
+            end
+        end)
+
+        table.insert(Estado.Conexoes, conexaoFly)
+    else
+        FlyButton.BackgroundColor3 = CONFIG.COR_BOTAO
+        FlyButton.Text = "Fly"
+        FlyControlsGui.Enabled = false
+
+        if Estado.FlyGyro then Estado.FlyGyro:Destroy() Estado.FlyGyro = nil end
+        if Estado.FlyVelocity then Estado.FlyVelocity:Destroy() Estado.FlyVelocity = nil end
+    end
+end)
+
+-- ================= FOCUS =================
+local FocusButton = criarBotao("Focus", 3)
+
+FocusButton.MouseButton1Click:Connect(function()
+    Estado.FocusAtivo = not Estado.FocusAtivo
+
+    if Estado.FocusAtivo then
+        FocusButton.BackgroundColor3 = CONFIG.COR_BOTAO_ATIVO
+        FocusButton.Text = "Focus ✓"
+
+        Estado.FocusPart = Instance.new("Part")
+        Estado.FocusPart.Size = Vector3.new(2, 2, 2)
+        Estado.FocusPart.Shape = Enum.PartType.Ball
+        Estado.FocusPart.Material = Enum.Material.Neon
+        Estado.FocusPart.Color = CONFIG.COR_ROXA_CLARA
+        Estado.FocusPart.Anchored = true
+        Estado.FocusPart.CanCollide = false
+        Estado.FocusPart.Parent = workspace
+
+        local angulo = 0
+
+        local conexaoFocus = RunService.Heartbeat:Connect(function(dt)
+            if not Estado.FocusAtivo or not Estado.FocusPart or not Estado.FocusPart.Parent then return end
+
+            local char = LocalPlayer.Character
+            if not char then return end
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+
+            angulo = angulo + dt * 3
+            local raio = 6
+            local offset = Vector3.new(
+                math.cos(angulo) * raio,
+                3 + math.sin(angulo * 2) * 1.5,
+                math.sin(angulo) * raio
+            )
+            Estado.FocusPart.CFrame = CFrame.new(hrp.Position + offset)
+        end)
+
+        table.insert(Estado.Conexoes, conexaoFocus)
+    else
+        FocusButton.BackgroundColor3 = CONFIG.COR_BOTAO
+        FocusButton.Text = "Focus"
+
+        if Estado.FocusPart then
+            Estado.FocusPart:Destroy()
+            Estado.FocusPart = nil
+        end
+    end
+end)-- ============================================================
+-- AETHER HUB - PARTE 4/4
+-- Sistema de Key + Atalho + Limpeza
+-- ============================================================
+
+-- ================= SISTEMA DE KEY =================
+local KeyGui = Instance.new("ScreenGui")
+KeyGui.Name = "AetherKeyGui"
+KeyGui.ResetOnSpawn = false
+KeyGui.Parent = ScreenGui
+
+local KeyFrame = Instance.new("Frame")
+KeyFrame.Size = UDim2.new(0, 300, 0, 180)
+KeyFrame.Position = UDim2.new(0.5, -150, 0.5, -90)
+KeyFrame.BackgroundColor3 = CONFIG.COR_FUNDO_ESCURO
+KeyFrame.BorderSizePixel = 0
+KeyFrame.Parent = KeyGui
+
+local KeyCorner = Instance.new("UICorner")
+KeyCorner.CornerRadius = UDim.new(0, 12)
+KeyCorner.Parent = KeyFrame
+
+local KeyStroke = Instance.new("UIStroke")
+KeyStroke.Color = CONFIG.COR_ROXA_CLARA
+KeyStroke.Thickness = 2
+KeyStroke.Parent = KeyFrame
+
+local KeyTitle = Instance.new("TextLabel")
+KeyTitle.Size = UDim2.new(1, 0, 0, 40)
+KeyTitle.Position = UDim2.new(0, 0, 0, 5)
+KeyTitle.BackgroundTransparency = 1
+KeyTitle.Text = "🔐 Aether Hub - Key"
+KeyTitle.TextColor3 = CONFIG.COR_TEXTO
+KeyTitle.TextScaled = true
+KeyTitle.Font = Enum.Font.GothamBold
+KeyTitle.Parent = KeyFrame
+
+local KeyInput = Instance.new("TextBox")
+KeyInput.Size = UDim2.new(0.8, 0, 0, 40)
+KeyInput.Position = UDim2.new(0.1, 0, 0, 55)
+KeyInput.BackgroundColor3 = Color3.fromRGB(40, 25, 60)
+KeyInput.TextColor3 = CONFIG.COR_TEXTO
+KeyInput.Text = ""
+KeyInput.PlaceholderText = "Digite a key..."
+KeyInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+KeyInput.TextScaled = true
+KeyInput.Font = Enum.Font.Gotham
+KeyInput.BorderSizePixel = 0
+KeyInput.Parent = KeyFrame
+
+local KeyInputCorner = Instance.new("UICorner")
+KeyInputCorner.CornerRadius = UDim.new(0, 8)
+KeyInputCorner.Parent = KeyInput
+
+local SubmitButton = Instance.new("TextButton")
+SubmitButton.Size = UDim2.new(0.8, 0, 0, 40)
+SubmitButton.Position = UDim2.new(0.1, 0, 0, 115)
+SubmitButton.BackgroundColor3 = CONFIG.COR_ROXA_CLARA
+SubmitButton.TextColor3 = CONFIG.COR_TEXTO
+SubmitButton.Text = "Verificar Key"
+SubmitButton.TextScaled = true
+SubmitButton.Font = Enum.Font.GothamBold
+SubmitButton.BorderSizePixel = 0
+SubmitButton.Parent = KeyFrame
+
+local SubmitCorner = Instance.new("UICorner")
+SubmitCorner.CornerRadius = UDim.new(0, 8)
+SubmitCorner.Parent = SubmitButton
+
+SubmitButton.MouseButton1Click:Connect(function()
+    if KeyInput.Text == CONFIG.KEY_VALIDA then
+        KeyGui.Enabled = false
+        MainFrame.Visible = true
+        print("[Aether Hub] Key correta! Hub liberado.")
+    else
+        KeyInput.Text = ""
+        KeyInput.PlaceholderText = "❌ Key incorreta! Tente novamente."
+        KeyInput.PlaceholderColor3 = Color3.fromRGB(255, 100, 100)
+    end
+end)
+
+-- Bloqueia o hub até inserir a key
+MainFrame.Visible = false
+KeyGui.Enabled = true
+
+-- ================= ATALHO (RightCtrl) =================
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.RightControl then
+        if Estado.HubAberto then
+            ContentFrame.Visible = false
+            MainFrame.Size = UDim2.new(0, 280, 0, 38)
+            MinimizeButton.Text = "+"
+            Estado.HubAberto = false
+        else
+            ContentFrame.Visible = true
+            MainFrame.Size = CONFIG.TAMANHO_HUB
+            MinimizeButton.Text = "−"
+            Estado.HubAberto = true
+        end
+    end
+end)
+
+-- ================= LIMPEZA =================
+local function limpar()
+    for _, conexao in pairs(Estado.Conexoes) do
+        pcall(function() conexao:Disconnect() end)
+    end
+    Estado.Conexoes = {}
+
+    if Estado.FocusPart then pcall(function() Estado.FocusPart:Destroy() end) end
+    if Estado.FlyGyro then pcall(function() Estado.FlyGyro:Destroy() end) end
+    if Estado.FlyVelocity then pcall(function() Estado.FlyVelocity:Destroy() end) end
+
+    pcall(function() ScreenGui:Destroy() end)
+end
+
+print("[Aether Hub] Script carregado! Use a key 'teste' para liberar o hub.")
