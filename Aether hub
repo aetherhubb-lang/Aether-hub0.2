@@ -11,14 +11,15 @@ local LocalPlayer      = Players.LocalPlayer
 local lp               = LocalPlayer
 local Camera           = workspace.CurrentCamera
 
--- PALETA DE ROXOS
+-- ============================================================
+-- 🎨 PALETA BASE
+-- ============================================================
 local PurpleColors = {
     Color3.fromRGB(190, 150, 255),
     Color3.fromRGB(140,  80, 230),
     Color3.fromRGB(180,   0, 255),
     Color3.fromRGB( 75,  20, 130),
 }
-local currentColorIndex = 1
 
 local COR_FUNDO     = Color3.fromRGB(20, 15, 30)
 local COR_HEADER    = Color3.fromRGB(25, 18, 40)
@@ -27,14 +28,32 @@ local COR_TEXTO     = Color3.fromRGB(200, 170, 255)
 local COR_TEXTO_OFF = Color3.fromRGB(150, 120, 200)
 local COR_DIVISOR   = Color3.fromRGB(45, 25, 75)
 
--- TAMANHOS
+-- ============================================================
+-- 🎨 TEMAS DE COR
+-- ============================================================
+local Temas = {
+    {nome = "Roxo",        cor = Color3.fromRGB(190, 150, 255)},
+    {nome = "Vermelho",    cor = Color3.fromRGB(255,  80,  80)},
+    {nome = "Azul",        cor = Color3.fromRGB( 80, 140, 255)},
+    {nome = "Verde Claro", cor = Color3.fromRGB(120, 255, 140)},
+    {nome = "Ciano",       cor = Color3.fromRGB( 80, 240, 255)},
+    {nome = "RGB",         cor = nil},
+}
+local TemaAtual = 1
+local CorAtual  = Temas[1].cor
+
+-- ============================================================
+-- 📐 TAMANHOS
+-- ============================================================
 local NORMAL_SIZE = UDim2.new(0, 420, 0, 340)
 local NORMAL_POS  = UDim2.new(0.5, -210, 0.5, -170)
 local MIN_SIZE    = UDim2.new(0, 420, 0, 55)
 
 local KEY_VALIDA  = "teste"
 
+-- ============================================================
 -- ESTADO
+-- ============================================================
 local Estado = {
     HubAberto = true,
     GojoAtivo = false,
@@ -45,7 +64,9 @@ local Estado = {
     FlyGyro = nil
 }
 
+-- ============================================================
 -- BYPASS
+-- ============================================================
 local autoBypassActive = false
 local velocidadeAtual  = 2
 local alturaSubida     = 70
@@ -108,7 +129,9 @@ local function flyProVoid()
     return true
 end
 
--- GUI PRINCIPAL
+-- ============================================================
+-- 🖼️ GUI PRINCIPAL
+-- ============================================================
 if CoreGui:FindFirstChild("AetherHub") then
     CoreGui.AetherHub:Destroy()
 end
@@ -130,7 +153,9 @@ if not ScreenGui.Parent then
     ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 end
 
--- CONTAINER PRINCIPAL
+-- ============================================================
+-- 📦 CONTAINER PRINCIPAL
+-- ============================================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = NORMAL_SIZE
@@ -161,7 +186,9 @@ MainGradient.Color = ColorSequence.new({
 MainGradient.Rotation = 45
 MainGradient.Parent = MainFrame
 
--- HEADER
+-- ============================================================
+-- 🌈 HEADER
+-- ============================================================
 local Header = Instance.new("Frame")
 Header.Name = "Header"
 Header.Size = UDim2.new(1, 0, 0, 55)
@@ -271,7 +298,9 @@ LockStroke.Color = PurpleColors[1]
 LockStroke.Transparency = 0.2
 LockStroke.Parent = LockButton
 
--- CONTEÚDO PRINCIPAL
+-- ============================================================
+-- 📄 CONTEÚDO PRINCIPAL
+-- ============================================================
 local Content = Instance.new("ScrollingFrame")
 Content.Name = "Content"
 Content.Size = UDim2.new(1, -20, 1, -75)
@@ -299,7 +328,9 @@ ContentLayout.Padding = UDim.new(0, 0)
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ContentLayout.Parent = Content
 
--- EXTRAS
+-- ============================================================
+-- ➕ EXTRAS
+-- ============================================================
 local ExtrasContent = Instance.new("ScrollingFrame")
 ExtrasContent.Name = "ExtrasContent"
 ExtrasContent.Size = UDim2.new(1, -20, 1, -75)
@@ -348,7 +379,9 @@ BackDiv.BackgroundColor3 = COR_DIVISOR
 BackDiv.BorderSizePixel = 0
 BackDiv.Parent = BackBtn
 
--- PAINELZINHO 🌌
+-- ============================================================
+-- 🌌 PAINELZINHO
+-- ============================================================
 local MiniPanel = Instance.new("TextButton")
 MiniPanel.Name = "MiniPanel"
 MiniPanel.Size = UDim2.new(1, 0, 1, 0)
@@ -371,7 +404,9 @@ MiniIcon.TextScaled = false
 MiniIcon.ZIndex = 6
 MiniIcon.Parent = MiniPanel
 
+-- ============================================================
 -- FUNÇÕES
+-- ============================================================
 local function criarLinha(nomeBase, layoutOrder)
     local row = Instance.new("Frame")
     row.Name = nomeBase .. "Row"
@@ -449,17 +484,24 @@ end
 local function setLinhaAtiva(btn, nomeBase, ativo)
     btn:SetAttribute("ativo", ativo)
     btn.Text = nomeBase .. (ativo and ": ON" or ": OFF")
-    if ativo then btn.TextColor3 = PurpleColors[1]
-    else btn.TextColor3 = COR_TEXTO_OFF end
+    if ativo then
+        btn.TextColor3 = CorAtual or PurpleColors[1]
+    else
+        btn.TextColor3 = COR_TEXTO_OFF
+    end
 end
 
+-- ============================================================
 -- LÓGICA CADEADO
+-- ============================================================
 LockButton.MouseButton1Click:Connect(function()
     MainFrame.Draggable = not MainFrame.Draggable
     LockButton.Text = MainFrame.Draggable and "🔓" or "🔒"
 end)
 
+-- ============================================================
 -- MINIMIZAR / RESTAURAR
+-- ============================================================
 local isMinimized = false
 local MIN_PANEL_SIZE = UDim2.new(0, 60, 0, 60)
 
@@ -820,17 +862,17 @@ BackBtn.MouseButton1Click:Connect(function()
 end)
 
 BackBtn.MouseEnter:Connect(function() BackBtn.TextColor3 = COR_TEXTO end)
-BackBtn.MouseLeave:Connect(function() BackBtn.TextColor3 = PurpleColors[1] end)
+BackBtn.MouseLeave:Connect(function() BackBtn.TextColor3 = CorAtual or PurpleColors[1] end)
 
 -- ============================================================
--- ⚙️ CONFIGURAÇÕES (dentro da aba Extras)
+-- ⚙️ CONFIGURAÇÕES
 -- ============================================================
 local ConfigBtn, ConfigNome = criarLinhaExtras("⚙️ Configurações", 1)
 local ConfigAberto = false
 local ConfigConexoes = {}
 
 local function fecharConfigs()
-    for _, nome in ipairs({"FullbrightRow", "GodModeRow", "SpeedRow", "NoclipRow", "InfiniteJumpRow", "RejoinRow"}) do
+    for _, nome in ipairs({"FullbrightRow", "InfiniteJumpRow", "RejoinRow", "CorRow"}) do
         local r = ExtrasContent:FindFirstChild(nome)
         if r then r:Destroy() end
     end
@@ -841,20 +883,6 @@ local function fecharConfigs()
         local L = game:GetService("Lighting")
         L.Brightness = 1
         L.GlobalShadows = true
-        local char = lp.Character
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if hum then
-            hum.MaxHealth = 100
-            hum.Health = 100
-            hum.WalkSpeed = 16
-            hum.UseJumpPower = true
-            hum.JumpPower = 50
-        end
-        if char then
-            for _, p in pairs(char:GetDescendants()) do
-                if p:IsA("BasePart") then p.CanCollide = true end
-            end
-        end
     end)
 
     ConfigAberto = false
@@ -883,59 +911,8 @@ local function abrirConfigs()
         end
     end)
 
-    -- 🛡️ GOD MODE
-    local GodBtn, GodNome = criarLinhaExtras("🛡️ God Mode", 3)
-    GodBtn.Parent.Name = "GodModeRow"
-    GodBtn.MouseButton1Click:Connect(function()
-        local ativo = not GodBtn:GetAttribute("ativo")
-        setLinhaAtiva(GodBtn, GodNome, ativo)
-        if ativo then
-            local con = RunService.Heartbeat:Connect(function()
-                if not GodBtn:GetAttribute("ativo") then return end
-                local char = lp.Character
-                local hum = char and char:FindFirstChildOfClass("Humanoid")
-                if hum then
-                    hum.MaxHealth = math.huge
-                    hum.Health = math.huge
-                end
-            end)
-            table.insert(ConfigConexoes, con)
-        end
-    end)
-
-    -- ⚡ SPEED HACK
-    local SpeedBtn, SpeedNome = criarLinhaExtras("⚡ Speed Hack", 4)
-    SpeedBtn.Parent.Name = "SpeedRow"
-    SpeedBtn.MouseButton1Click:Connect(function()
-        local ativo = not SpeedBtn:GetAttribute("ativo")
-        setLinhaAtiva(SpeedBtn, SpeedNome, ativo)
-        local char = lp.Character
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if hum then hum.WalkSpeed = ativo and 100 or 16 end
-    end)
-
-    -- 🕳️ NOCLIP
-    local NoclipBtn, NoclipNome = criarLinhaExtras("🕳️ Noclip", 5)
-    NoclipBtn.Parent.Name = "NoclipRow"
-    NoclipBtn.MouseButton1Click:Connect(function()
-        local ativo = not NoclipBtn:GetAttribute("ativo")
-        setLinhaAtiva(NoclipBtn, NoclipNome, ativo)
-        if ativo then
-            local con = RunService.Stepped:Connect(function()
-                if not NoclipBtn:GetAttribute("ativo") then return end
-                local char = lp.Character
-                if char then
-                    for _, p in pairs(char:GetDescendants()) do
-                        if p:IsA("BasePart") then p.CanCollide = false end
-                    end
-                end
-            end)
-            table.insert(ConfigConexoes, con)
-        end
-    end)
-
     -- 🦘 INFINITE JUMP
-    local JumpBtn, JumpNome = criarLinhaExtras("🦘 Infinite Jump", 6)
+    local JumpBtn, JumpNome = criarLinhaExtras("🦘 Infinite Jump", 3)
     JumpBtn.Parent.Name = "InfiniteJumpRow"
     JumpBtn.MouseButton1Click:Connect(function()
         local ativo = not JumpBtn:GetAttribute("ativo")
@@ -952,7 +929,7 @@ local function abrirConfigs()
     end)
 
     -- 🔄 REJOIN
-    local RejoinBtn = criarLinhaExtras("🔄 Rejoin Server", 7)
+    local RejoinBtn = criarLinhaExtras("🔄 Rejoin Server", 4)
     RejoinBtn.Parent.Name = "RejoinRow"
     RejoinBtn.MouseButton1Click:Connect(function()
         RejoinBtn.Text = "🔄 Reconectando..."
@@ -960,6 +937,15 @@ local function abrirConfigs()
         pcall(function()
             game:GetService("TeleportService"):Teleport(game.PlaceId, lp)
         end)
+    end)
+
+    -- 🎨 COR DO HUB
+    local CorBtn = criarLinhaExtras("🎨 Cor: " .. Temas[TemaAtual].nome, 5)
+    CorBtn.Parent.Name = "CorRow"
+    CorBtn.MouseButton1Click:Connect(function()
+        TemaAtual = TemaAtual + 1
+        if TemaAtual > #Temas then TemaAtual = 1 end
+        CorBtn.Text = "🎨 Cor: " .. Temas[TemaAtual].nome
     end)
 end
 
@@ -1055,7 +1041,9 @@ end)
 MainFrame.Visible = false
 KeyGui.Enabled = true
 
--- ANIMAÇÃO DE ENTRADA
+-- ============================================================
+-- 🎬 ANIMAÇÃO DE ENTRADA
+-- ============================================================
 MainFrame.Size = UDim2.new(0, 0, 0, 0)
 MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 
@@ -1064,27 +1052,42 @@ TweenService:Create(MainFrame, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.E
     Position = NORMAL_POS,
 }):Play()
 
--- LOOP DE CORES
+-- ============================================================
+-- 🎨 LOOP DE CORES (por tema / RGB)
+-- ============================================================
 task.spawn(function()
+    local hue = 0
     while MainFrame.Parent do
-        currentColorIndex = currentColorIndex % #PurpleColors + 1
-        local nextColor = PurpleColors[currentColorIndex]
-        local ti = TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+        local tema = Temas[TemaAtual]
+        local cor, espera
 
-        TweenService:Create(MainStroke,     ti, { Color = nextColor }):Play()
-        TweenService:Create(LogoStroke,     ti, { Color = nextColor }):Play()
-        TweenService:Create(Title,          ti, { TextColor3 = nextColor }):Play()
-        TweenService:Create(MinButton,      ti, { TextColor3 = nextColor }):Play()
-        TweenService:Create(MinStroke,      ti, { Color = nextColor }):Play()
-        TweenService:Create(LockButton,     ti, { TextColor3 = nextColor }):Play()
-        TweenService:Create(LockStroke,     ti, { Color = nextColor }):Play()
-        TweenService:Create(ContentStroke,  ti, { Color = nextColor }):Play()
-        TweenService:Create(ExtrasStroke,   ti, { Color = nextColor }):Play()
-        TweenService:Create(MiniIcon,       ti, { TextColor3 = nextColor }):Play()
-        TweenService:Create(KFS,            ti, { Color = nextColor }):Play()
-        TweenService:Create(SubmitButton,   ti, { BackgroundColor3 = nextColor }):Play()
+        if tema.nome == "RGB" then
+            hue = (hue + 0.03) % 1
+            cor = Color3.fromHSV(hue, 1, 1)
+            espera = 0.05
+        else
+            cor = tema.cor
+            espera = 0.3
+        end
 
-        task.wait(1.2)
+        CorAtual = cor
+        local ti = TweenInfo.new(0.25, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+
+        TweenService:Create(MainStroke,     ti, { Color = cor }):Play()
+        TweenService:Create(LogoStroke,     ti, { Color = cor }):Play()
+        TweenService:Create(Title,          ti, { TextColor3 = cor }):Play()
+        TweenService:Create(MinButton,      ti, { TextColor3 = cor }):Play()
+        TweenService:Create(MinStroke,      ti, { Color = cor }):Play()
+        TweenService:Create(LockButton,     ti, { TextColor3 = cor }):Play()
+        TweenService:Create(LockStroke,     ti, { Color = cor }):Play()
+        TweenService:Create(ContentStroke,  ti, { Color = cor }):Play()
+        TweenService:Create(ExtrasStroke,   ti, { Color = cor }):Play()
+        TweenService:Create(MiniIcon,       ti, { TextColor3 = cor }):Play()
+        TweenService:Create(KFS,            ti, { Color = cor }):Play()
+        TweenService:Create(SubmitButton,   ti, { BackgroundColor3 = cor }):Play()
+        TweenService:Create(KeyTitle,       ti, { TextColor3 = cor }):Play()
+
+        task.wait(espera)
     end
 end)
 
