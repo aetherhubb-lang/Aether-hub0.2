@@ -1,17 +1,15 @@
 -- ============================================================
--- AETHER HUB - PARTE 1/4
--- Serviços, Tema, Configurações e Base do Hub
+-- AETHER HUB - PARTE 1/4 (OTIMIZADA)
+-- Base, Tema e Top Bar
 -- ============================================================
 
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local LocalPlayer = game:GetService("Players").LocalPlayer
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
--- ============================================================
--- 🎨 TEMA (Roxo)
--- ============================================================
 local Theme = {
     Background   = Color3.fromRGB(18, 12, 28),     
     TopBar       = Color3.fromRGB(25, 15, 35),     
@@ -26,27 +24,18 @@ local Theme = {
     ToggleKnob   = Color3.fromRGB(230, 220, 255),  
 }
 
-if CoreGui:FindFirstChild("AetherUI") then
-    CoreGui.AetherUI:Destroy()
-end
-if CoreGui:FindFirstChild("DomainHighlights_Aether") then
-    CoreGui.DomainHighlights_Aether:Destroy()
-end
+-- Limpeza de cache antigo
+if CoreGui:FindFirstChild("AetherUI") then CoreGui.AetherUI:Destroy() end
+if CoreGui:FindFirstChild("DomainHighlights_Aether") then CoreGui.DomainHighlights_Aether:Destroy() end
 
--- ============================================================
--- 🖼️ GUI PRINCIPAL
--- ============================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "AetherUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
 pcall(function()
     if gethui then ScreenGui.Parent = gethui() else ScreenGui.Parent = CoreGui end
 end)
-if not ScreenGui.Parent then
-    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-end
+if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local TAMANHO_NORMAL = UDim2.new(0, 460, 0, 320)
 local TAMANHO_MINI   = UDim2.new(0, 60, 0, 60)
@@ -62,18 +51,11 @@ MainFrame.Active = true
 MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
 
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 12)
-MainCorner.Parent = MainFrame
-
-local MainStroke = Instance.new("UIStroke")
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Theme.Accent
 MainStroke.Thickness = 2
-MainStroke.Parent = MainFrame
 
--- ============================================================
--- 📌 TOP BAR (Cabeçalho)
--- ============================================================
 local TopBar = Instance.new("Frame")
 TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 45)
@@ -81,10 +63,7 @@ TopBar.BackgroundColor3 = Theme.TopBar
 TopBar.BorderSizePixel = 0
 TopBar.Active = true
 TopBar.Parent = MainFrame
-
-local TopCorner = Instance.new("UICorner")
-TopCorner.CornerRadius = UDim.new(0, 12)
-TopCorner.Parent = TopBar
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 12)
 
 local TopFix = Instance.new("Frame")
 TopFix.Size = UDim2.new(1, 0, 0, 12)
@@ -114,13 +93,10 @@ MinBtn.Font = Enum.Font.GothamBold
 MinBtn.TextSize = 24
 MinBtn.AutoButtonColor = false
 MinBtn.Parent = TopBar-- ============================================================
--- AETHER HUB - PARTE 2/4
--- Abas do Topo, Área de Conteúdo e Função criarToggle
+-- AETHER HUB - PARTE 2/4 (OTIMIZADA)
+-- Abas, Toggles e Páginas
 -- ============================================================
 
--- ============================================================
--- 📑 TAB BAR (Menu Horizontal no Topo)
--- ============================================================
 local TabBar = Instance.new("Frame")
 TabBar.Name = "TabBar"
 TabBar.Size = UDim2.new(1, -24, 0, 40) 
@@ -128,23 +104,17 @@ TabBar.Position = UDim2.new(0, 12, 0, 55)
 TabBar.BackgroundColor3 = Theme.TabBg
 TabBar.BorderSizePixel = 0
 TabBar.Parent = MainFrame
-
-local TabBarCorner = Instance.new("UICorner")
-TabBarCorner.CornerRadius = UDim.new(0, 8)
-TabBarCorner.Parent = TabBar
-
-local TabBarStroke = Instance.new("UIStroke")
+Instance.new("UICorner", TabBar).CornerRadius = UDim.new(0, 8)
+local TabBarStroke = Instance.new("UIStroke", TabBar)
 TabBarStroke.Color = Theme.Outline
 TabBarStroke.Thickness = 1.5
-TabBarStroke.Parent = TabBar
 
-local TabLayout = Instance.new("UIListLayout")
+local TabLayout = Instance.new("UIListLayout", TabBar)
 TabLayout.FillDirection = Enum.FillDirection.Horizontal
 TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
 TabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 TabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 TabLayout.Padding = UDim.new(0, 2)
-TabLayout.Parent = TabBar
 
 local function criarAba(texto, layoutOrder)
     local btn = Instance.new("TextButton")
@@ -157,11 +127,7 @@ local function criarAba(texto, layoutOrder)
     btn.AutoButtonColor = false
     btn.LayoutOrder = layoutOrder
     btn.Parent = TabBar
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
-    
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
     return btn
 end
 
@@ -172,9 +138,6 @@ local AbaTeleporte = criarAba("Teleporte", 4)
 local AbaExtras = criarAba("Extras", 5)
 local AbaCreditos = criarAba("Créditos", 6)
 
--- ============================================================
--- 📄 ÁREA DE CONTEÚDO
--- ============================================================
 local ContentArea = Instance.new("Frame")
 ContentArea.Name = "ContentArea"
 ContentArea.Size = UDim2.new(1, -24, 1, -110)
@@ -183,9 +146,10 @@ ContentArea.BackgroundColor3 = Theme.ContentBg
 ContentArea.BorderSizePixel = 0
 ContentArea.ClipsDescendants = true 
 ContentArea.Parent = MainFrame
-
-local ContentC = Instance.new("UICorner"); ContentC.CornerRadius = UDim.new(0, 8); ContentC.Parent = ContentArea
-local ContentStroke = Instance.new("UIStroke"); ContentStroke.Color = Theme.Outline; ContentStroke.Thickness = 1.5; ContentStroke.Parent = ContentArea
+Instance.new("UICorner", ContentArea).CornerRadius = UDim.new(0, 8)
+local ContentStroke = Instance.new("UIStroke", ContentArea)
+ContentStroke.Color = Theme.Outline
+ContentStroke.Thickness = 1.5
 
 local PageTitle = Instance.new("TextLabel")
 PageTitle.Size = UDim2.new(1, 0, 0, 50)
@@ -198,9 +162,6 @@ PageTitle.TextSize = 32
 PageTitle.ZIndex = 1
 PageTitle.Parent = ContentArea
 
--- ============================================================
--- 🎛️ FUNÇÃO: CRIAR TOGGLE
--- ============================================================
 local function criarToggle(parent, texto, layoutOrder, callback)
     local row = Instance.new("Frame")
     row.Size = UDim2.new(1, -10, 0, 42) 
@@ -209,9 +170,10 @@ local function criarToggle(parent, texto, layoutOrder, callback)
     row.LayoutOrder = layoutOrder
     row.ZIndex = 2
     row.Parent = parent
-    
-    local rowC = Instance.new("UICorner"); rowC.CornerRadius = UDim.new(0, 8); rowC.Parent = row
-    local rowStroke = Instance.new("UIStroke"); rowStroke.Color = Theme.Outline; rowStroke.Thickness = 1.5; rowStroke.Parent = row
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+    local rowStroke = Instance.new("UIStroke", row)
+    rowStroke.Color = Theme.Outline
+    rowStroke.Thickness = 1.5
 
     local txt = Instance.new("TextLabel")
     txt.Size = UDim2.new(1, -80, 1, 0)
@@ -238,7 +200,7 @@ local function criarToggle(parent, texto, layoutOrder, callback)
     toggleBg.BackgroundColor3 = Theme.ToggleOff
     toggleBg.ZIndex = 3
     toggleBg.Parent = row
-    local bgC = Instance.new("UICorner"); bgC.CornerRadius = UDim.new(1, 0); bgC.Parent = toggleBg
+    Instance.new("UICorner", toggleBg).CornerRadius = UDim.new(1, 0)
 
     local knob = Instance.new("Frame")
     knob.Size = UDim2.new(0, 16, 0, 16)
@@ -246,25 +208,21 @@ local function criarToggle(parent, texto, layoutOrder, callback)
     knob.BackgroundColor3 = Theme.ToggleKnob
     knob.ZIndex = 4
     knob.Parent = toggleBg
-    local knobC = Instance.new("UICorner"); knobC.CornerRadius = UDim.new(1, 0); knobC.Parent = knob
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
 
     local isToggled = false
     btn.MouseButton1Click:Connect(function()
         isToggled = not isToggled
-        if isToggled then
-            TweenService:Create(toggleBg, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Accent}):Play()
-            TweenService:Create(knob, TweenInfo.new(0.2), {Position = UDim2.new(1, -19, 0.5, -8)}):Play()
-        else
-            TweenService:Create(toggleBg, TweenInfo.new(0.2), {BackgroundColor3 = Theme.ToggleOff}):Play()
-            TweenService:Create(knob, TweenInfo.new(0.2), {Position = UDim2.new(0, 3, 0.5, -8)}):Play()
-        end
+        local targetColor = isToggled and Theme.Accent or Theme.ToggleOff
+        local targetPos = isToggled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+        
+        TweenService:Create(toggleBg, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
+        TweenService:Create(knob, TweenInfo.new(0.2), {Position = targetPos}):Play()
+        
         if callback then callback(isToggled) end
     end)
 end
 
--- ============================================================
--- 📄 CONFIGURAÇÃO DAS PÁGINAS
--- ============================================================
 local function criarPagina()
     local p = Instance.new("ScrollingFrame")
     p.Size = UDim2.new(1, 0, 1, -60) 
@@ -273,23 +231,19 @@ local function criarPagina()
     p.BorderSizePixel = 0
     p.ScrollBarThickness = 3
     p.ScrollBarImageColor3 = Theme.Accent
-    p.CanvasSize = UDim2.new(0, 0, 0, 0)
     p.AutomaticCanvasSize = Enum.AutomaticSize.Y
     p.ClipsDescendants = true
     p.Visible = false
     p.Parent = ContentArea
     
-    local layout = Instance.new("UIListLayout")
+    local layout = Instance.new("UIListLayout", p)
     layout.Padding = UDim.new(0, 6)
     layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center 
-    layout.Parent = p
     
-    local padding = Instance.new("UIPadding")
+    local padding = Instance.new("UIPadding", p)
     padding.PaddingTop = UDim.new(0, 5)
     padding.PaddingBottom = UDim.new(0, 5)
-    padding.Parent = p
-    
     return p
 end
 
@@ -299,15 +253,12 @@ local PageKokusen = criarPagina()
 local PageTeleporte = criarPagina()
 local PageExtras = criarPagina()
 local PageCreditos = criarPagina()-- ============================================================
--- AETHER HUB - PARTE 3/4
--- Lógica de Invisibilidade, ESP Domínio e Aba de Créditos
+-- AETHER HUB - PARTE 3/4 (OTIMIZADA)
+-- Invisibilidade com respawn e ESP via DescendantAdded
 -- ============================================================
 
--- ============================================================
--- 👻 PAINEL DE INVISIBILIDADE FLUTUANTE E LÓGICA
--- ============================================================
+-- ================= INVISIBILIDADE =================
 local InvisPanel = Instance.new("TextButton")
-InvisPanel.Name = "InvisPanel"
 InvisPanel.Size = UDim2.new(0, 160, 0, 40)
 InvisPanel.Position = UDim2.new(1, -180, 0, 20)
 InvisPanel.BackgroundColor3 = Theme.TabBg
@@ -319,28 +270,39 @@ InvisPanel.BorderSizePixel = 0
 InvisPanel.Visible = false
 InvisPanel.ZIndex = 15
 InvisPanel.Parent = ScreenGui
-
-local InvisCorner = Instance.new("UICorner"); InvisCorner.CornerRadius = UDim.new(0, 8); InvisCorner.Parent = InvisPanel
-local InvisStroke = Instance.new("UIStroke"); InvisStroke.Color = Theme.Outline; InvisStroke.Thickness = 1.5; InvisStroke.Parent = InvisPanel
+Instance.new("UICorner", InvisPanel).CornerRadius = UDim.new(0, 8)
+local InvisStroke = Instance.new("UIStroke", InvisPanel)
+InvisStroke.Color = Theme.Outline
+InvisStroke.Thickness = 1.5
 
 local isInvisible = false
-local invisConnection = nil
+local invisLoop = nil
+
+local function AplicarInvisibilidade(char, ativo)
+    if not char then return end
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") or part:IsA("Decal") or part:IsA("Texture") then
+            part.Transparency = ativo and 1 or 0
+        end
+    end
+end
 
 local function toggleInvisibilidade(ativo)
     isInvisible = ativo
+    
     if ativo then
         InvisPanel.Text = "(invisibilidade on)"
         InvisPanel.TextColor3 = Theme.Accent
         InvisStroke.Color = Theme.Accent
-        if not invisConnection then
-            invisConnection = RunService.Heartbeat:Connect(function()
-                local char = LocalPlayer.Character
-                if char then
-                    for _, part in pairs(char:GetDescendants()) do
-                        if part:IsA("BasePart") or part:IsA("Decal") or part:IsA("Texture") then
-                            pcall(function() part.Transparency = 1 end)
-                        end
-                    end
+        
+        AplicarInvisibilidade(LocalPlayer.Character, true)
+        
+        -- Otimização: loop mais lento (0.2s) para não travar o celular
+        if not invisLoop then
+            invisLoop = task.spawn(function()
+                while isInvisible do
+                    AplicarInvisibilidade(LocalPlayer.Character, true)
+                    task.wait(0.2)
                 end
             end)
         end
@@ -348,28 +310,27 @@ local function toggleInvisibilidade(ativo)
         InvisPanel.Text = "(invisibilidade off)"
         InvisPanel.TextColor3 = Theme.TextDark
         InvisStroke.Color = Theme.Outline
-        if invisConnection then invisConnection:Disconnect() invisConnection = nil end
-        local char = LocalPlayer.Character
-        if char then
-            for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") or part:IsA("Decal") or part:IsA("Texture") then
-                    pcall(function() part.Transparency = 0 end)
-                end
-            end
-        end
+        
+        if invisLoop then task.cancel(invisLoop) invisLoop = nil end
+        AplicarInvisibilidade(LocalPlayer.Character, false)
     end
 end
 
-InvisPanel.MouseButton1Click:Connect(function() toggleInvisibilidade(not isInvisible) end)
+-- Se o jogador morrer e der respawn, a invisibilidade continua se estiver ativa
+LocalPlayer.CharacterAdded:Connect(function(newChar)
+    task.wait(0.5)
+    if isInvisible then
+        AplicarInvisibilidade(newChar, true)
+    end
+end)
 
+InvisPanel.MouseButton1Click:Connect(function() toggleInvisibilidade(not isInvisible) end)
 criarToggle(PagePrincipal, "invisível", 1, function(ativo)
     InvisPanel.Visible = ativo
     if not ativo then toggleInvisibilidade(false) end
 end)
 
--- ============================================================
--- 🌐 ESP DE EXPANSÃO (DOMAIN) - PÁGINA ESP
--- ============================================================
+-- ================= ESP DOMÍNIO (OTIMIZADO) =================
 local NOMES_PROCURADOS = {"Domain", "Expansion", "Domínio", "Malevolent Shrine", "Unlimited Void", "Chimera Shadow Garden"} 
 local ESP_Domain_Ativo = false
 local dominiosNoMapa = {}
@@ -392,9 +353,10 @@ local stroke = Instance.new("UIStroke", alerta)
 stroke.Color = Color3.fromRGB(255, 0, 0)
 stroke.Thickness = 2
 
+-- Efeito de piscar otimizado (roda só se o ESP tiver ligado)
 task.spawn(function()
     while true do
-        if alerta.Visible then
+        if alerta.Visible and ESP_Domain_Ativo then
             TweenService:Create(stroke, TweenInfo.new(0.5), {Transparency = 1}):Play()
             TweenService:Create(alerta, TweenInfo.new(0.5), {BackgroundTransparency = 0.8}):Play()
             task.wait(0.5)
@@ -402,64 +364,67 @@ task.spawn(function()
             TweenService:Create(alerta, TweenInfo.new(0.5), {BackgroundTransparency = 0.3}):Play()
             task.wait(0.5)
         else
-            task.wait(0.5)
+            task.wait(1)
         end
     end
 end)
 
-local function checarExpansoes()
-    if not ESP_Domain_Ativo then return end
-    local encontrou = false
-
-    for obj, hl in pairs(dominiosNoMapa) do
-        if not obj or not obj.Parent then
-            hl:Destroy()
-            dominiosNoMapa[obj] = nil
-        end
-    end
-
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        local isDomain = false
-        for _, nome in ipairs(NOMES_PROCURADOS) do
-            if obj.Name:lower():find(nome:lower()) then
-                isDomain = true
-                break
-            end
-        end
-
-        if isDomain and (obj:IsA("Model") or obj:IsA("BasePart")) then
-            encontrou = true
-            if not dominiosNoMapa[obj] then
-                local hl = Instance.new("Highlight")
-                hl.Adornee = obj
-                hl.FillColor = Theme.Accent
-                hl.FillTransparency = 0.7
-                hl.OutlineColor = Color3.fromRGB(255, 100, 255)
-                hl.OutlineTransparency = 0
-                hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                hl.Parent = pastaHighlights
-                dominiosNoMapa[obj] = hl
-            end
-        end
-    end
-
-    if encontrou then
+local function adicionarHighlight(obj)
+    if not dominiosNoMapa[obj] then
+        local hl = Instance.new("Highlight")
+        hl.Adornee = obj
+        hl.FillColor = Theme.Accent
+        hl.FillTransparency = 0.7
+        hl.OutlineColor = Color3.fromRGB(255, 100, 255)
+        hl.OutlineTransparency = 0
+        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        hl.Parent = pastaHighlights
+        dominiosNoMapa[obj] = hl
         alerta.Visible = true
-    else
-        alerta.Visible = false
     end
 end
 
-task.spawn(function()
-    while true do
-        checarExpansoes()
-        task.wait(1)
+-- Verifica se um objeto é um domain
+local function checarObj(obj)
+    if not ESP_Domain_Ativo then return end
+    if not (obj:IsA("Model") or obj:IsA("BasePart")) then return end
+    
+    local nome = obj.Name:lower()
+    for _, nomeProcurado in ipairs(NOMES_PROCURADOS) do
+        if nome:find(nomeProcurado:lower()) then
+            adicionarHighlight(obj)
+            break
+        end
+    end
+end
+
+-- Verifica o que já existe no mapa ao ligar
+local function varrerMapaInicial()
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        checarObj(obj)
+    end
+end
+
+-- Otimização: escuta APENAS quando algo novo é adicionado no mapa
+workspace.DescendantAdded:Connect(function(obj)
+    if ESP_Domain_Ativo then
+        checarObj(obj)
+    end
+end)
+
+-- Limpeza se a parte for destruída
+workspace.DescendantRemoving:Connect(function(obj)
+    if dominiosNoMapa[obj] then
+        dominiosNoMapa[obj]:Destroy()
+        dominiosNoMapa[obj] = nil
     end
 end)
 
 criarToggle(PageESP, "ESP Domínio (Expansão)", 1, function(ativo)
     ESP_Domain_Ativo = ativo
-    if not ativo then
+    if ativo then
+        varrerMapaInicial()
+    else
         alerta.Visible = false
         for obj, hl in pairs(dominiosNoMapa) do
             if hl then hl:Destroy() end
@@ -468,9 +433,7 @@ criarToggle(PageESP, "ESP Domínio (Expansão)", 1, function(ativo)
     end
 end)
 
--- ============================================================
--- 👑 DESIGN DA PÁGINA DE CRÉDITOS
--- ============================================================
+-- ================= CRÉDITOS =================
 local DevLabel = Instance.new("TextLabel")
 DevLabel.Size = UDim2.new(1, 0, 0, 20)
 DevLabel.Position = UDim2.new(0, 0, 0.3, 0)
@@ -490,18 +453,13 @@ NomesLabel.TextColor3 = Color3.fromRGB(130, 210, 255)
 NomesLabel.Font = Enum.Font.GothamBold
 NomesLabel.TextSize = 30
 NomesLabel.Parent = PageCreditos
-
-local NomesStroke = Instance.new("UIStroke")
+local NomesStroke = Instance.new("UIStroke", NomesLabel)
 NomesStroke.Color = Color3.fromRGB(10, 50, 90)
-NomesStroke.Thickness = 2.5
-NomesStroke.Parent = NomesLabel-- ============================================================
--- AETHER HUB - PARTE 4/4
--- Navegação, Arrastar, Mini Painel e Fechamento
+NomesStroke.Thickness = 2.5-- ============================================================
+-- AETHER HUB - PARTE 4/4 (OTIMIZADA)
+-- Lógica das abas, minimizar e arrastar
 -- ============================================================
 
--- ============================================================
--- ⚙️ LÓGICA DAS ABAS
--- ============================================================
 local function MudarAba(abaAtiva, paginaAtiva, nomeTitulo)
     local abas = {AbaPrincipal, AbaESP, AbaKokusen, AbaTeleporte, AbaExtras, AbaCreditos}
     local paginas = {PagePrincipal, PageESP, PageKokusen, PageTeleporte, PageExtras, PageCreditos}
@@ -525,12 +483,9 @@ AbaKokusen.MouseButton1Click:Connect(function() MudarAba(AbaKokusen, PageKokusen
 AbaTeleporte.MouseButton1Click:Connect(function() MudarAba(AbaTeleporte, PageTeleporte, "Teleporte") end)
 AbaExtras.MouseButton1Click:Connect(function() MudarAba(AbaExtras, PageExtras, "Extras") end)
 AbaCreditos.MouseButton1Click:Connect(function() MudarAba(AbaCreditos, PageCreditos, "Créditos") end)
-
 MudarAba(AbaPrincipal, PagePrincipal, "Principal")
 
--- ============================================================
--- 🌌 MINI PAINEL E ARRASTAR
--- ============================================================
+-- ================= MINI PAINEL E DRAG =================
 local MiniPanel = Instance.new("TextButton")
 MiniPanel.Size = UDim2.new(1, 0, 1, 0)
 MiniPanel.BackgroundTransparency = 1
@@ -549,10 +504,7 @@ MiniIcon.TextSize = 34
 MiniIcon.ZIndex = 11
 MiniIcon.Parent = MiniPanel
 
-local dragging = false
-local dragInput, dragStart, startPos
-local currentDragFrame = nil
-
+local dragging, dragInput, dragStart, startPos, currentDragFrame
 local function makeDraggable(frameToDrag, dragArea)
     dragArea.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -584,7 +536,6 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 local isMinimized = false
-
 local function Minimizar()
     isMinimized = true
     TopBar.Visible = false; TabBar.Visible = false; ContentArea.Visible = false; MiniPanel.Visible = true
@@ -602,4 +553,4 @@ end
 MinBtn.MouseButton1Click:Connect(function() if not isMinimized then Minimizar() end end)
 MiniPanel.MouseButton1Click:Connect(function() if isMinimized then Restaurar() end end)
 
-print("🟣 AETHER HUB (Completo e Dividido) carregado com sucesso!")
+print("🟣 AETHER HUB (Otimizado) carregado com sucesso!")
