@@ -1,5 +1,5 @@
 -- ============================================================
--- PARTE 1: SERVIÇOS, TEMA E LÓGICA DO KOKUSEN
+-- PARTE 1: SERVIÇOS E LÓGICA DO KOKUSEN
 -- ============================================================
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
@@ -9,23 +9,9 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
--- Tema
-local Theme = {
-    Background   = Color3.fromRGB(12, 8, 20),
-    TopBar       = Color3.fromRGB(22, 14, 35),
-    TabBarBg     = Color3.fromRGB(18, 11, 28),
-    ContentBg    = Color3.fromRGB(15, 10, 25),
-    Accent       = Color3.fromRGB(190, 100, 255),
-    Text         = Color3.fromRGB(230, 220, 255),
-    TextDark     = Color3.fromRGB(150, 120, 200),
-    TextActive   = Color3.fromRGB(15, 10, 25),
-    LineColor    = Color3.fromRGB(90, 50, 140),
-}
-
--- Variáveis do Kokusen
 local KokusenAtivo = false
 local DistanciaDetectcao = 30
-local SideDashAtivo = true -- NOVA OPÇÃO: Controla o teleporte/dash
+local SideDashAtivo = true 
 
 local v15
 pcall(function()
@@ -100,7 +86,9 @@ local function f4(p3, p4, p5)
                 local position2 = cframe.Position
                 local lerp = position:Lerp(position2 - cframe.LookVector * v10, v13)
                 local v14 = math.sin(v13 * math.pi)
-                humanoidRootPart2.CFrame = CFrame.lookAt(lerp + cframe.RightVector * v14 * v10, position2)
+                humanoidRootPart2.CFrame = CFrame.lookAt(
+                    lerp + cframe.RightVector * v14 * v10, position2
+                )
                 return
             end
         end
@@ -113,43 +101,66 @@ if v15 and hookmetamethod then
     local v20
     v20 = v19(game, "__namecall", function(p7, ...)
         local v21 = getnamecallmethod() ~= "FireServer" or p7 ~= v15
-        if v21 or not KokusenAtivo or v18 then return v20(p7, ...) end
         
-        local v22 = { ... }
-        v18 = true
-        local v23 = v20(p7, ...)
-        
-        task.delay(0.31, function()
-            pcall(function() v15:FireServer(table.unpack(v22)) end)
-            v18 = false
-        end)
-        
-        task.delay(0.1, function()
-            -- VERIFICAÇÃO DO SIDE DASH AQUI
-            if not SideDashAtivo then return end 
+        if v21 then
+            return v20(p7, ...)
+        elseif not KokusenAtivo then
+            return v20(p7, ...)
+        elseif v18 then
+            return v20(p7, ...)
+        else
+            local v22 = { ... }
+            v18 = true
+            local v23 = v20(p7, ...)
             
-            local v24 = f5()
-            if not v24 then return end
-            local humanoidRootPart4 = v24:FindFirstChild("HumanoidRootPart")
-            if not humanoidRootPart4 then return end
+            task.delay(0.31, function()
+                pcall(function() v15:FireServer(table.unpack(v22)) end)
+                v18 = false
+            end)
             
-            local v25 = f1()
-            local v26 = 10
-            if v25 then
-                local dot = humanoidRootPart4.CFrame.LookVector:Dot(v25.CFrame.LookVector)
-                if dot > 0.5 then return end
-                if math.abs(dot) <= 0.5 then v26 = 5 end
+            task.delay(0.1, function()
+                if not SideDashAtivo then return end 
+                
+                local v24 = f5()
+                if not v24 then return end
+                local humanoidRootPart4 = v24:FindFirstChild("HumanoidRootPart")
+                if not humanoidRootPart4 then return end
+                
+                local v25 = f1()
+                local v26 = 10
+                if v25 then
+                    local dot = humanoidRootPart4.CFrame.LookVector:Dot(v25.CFrame.LookVector)
+                    if dot > 0.5 then return end
+                    if math.abs(dot) <= 0.5 then
+                        v26 = 5
+                    end
+                    f4(humanoidRootPart4, 0.31, v26)
+                    return
+                end
                 f4(humanoidRootPart4, 0.31, v26)
                 return
-            end
-            f4(humanoidRootPart4, 0.31, v26)
-        end)
-        return v23
+            end)
+            return v23
+        end
     end)
 end-- ============================================================
--- PARTE 2: JANELA PRINCIPAL E MENU HORIZONTAL
+-- PARTE 2: TEMA, JANELA E BARRA DE ABAS
 -- ============================================================
-if CoreGui:FindFirstChild("AetherUI") then CoreGui.AetherUI:Destroy() end
+local Theme = {
+    Background   = Color3.fromRGB(12, 8, 20),
+    TopBar       = Color3.fromRGB(22, 14, 35),
+    TabBarBg     = Color3.fromRGB(18, 11, 28),
+    ContentBg    = Color3.fromRGB(15, 10, 25),
+    Accent       = Color3.fromRGB(190, 100, 255),
+    Text         = Color3.fromRGB(230, 220, 255),
+    TextDark     = Color3.fromRGB(150, 120, 200),
+    TextActive   = Color3.fromRGB(15, 10, 25),
+    LineColor    = Color3.fromRGB(90, 50, 140),
+}
+
+if CoreGui:FindFirstChild("AetherUI") then
+    CoreGui.AetherUI:Destroy()
+end
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "AetherUI"
@@ -174,7 +185,6 @@ MainFrame.Parent = ScreenGui
 local MainCorner = Instance.new("UICorner"); MainCorner.CornerRadius = UDim.new(0, 12); MainCorner.Parent = MainFrame
 local MainStroke = Instance.new("UIStroke"); MainStroke.Color = Theme.LineColor; MainStroke.Thickness = 2; MainStroke.Parent = MainFrame
 
--- Cabeçalho
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 45)
 TopBar.BackgroundColor3 = Theme.TopBar
@@ -198,8 +208,8 @@ MinBtn.Size = UDim2.new(0, 30, 0, 30); MinBtn.Position = UDim2.new(1, -40, 0.5, 
 MinBtn.BackgroundTransparency = 1; MinBtn.Text = "×"; MinBtn.TextColor3 = Theme.Accent
 MinBtn.Font = Enum.Font.GothamBold; MinBtn.TextSize = 26; MinBtn.AutoButtonColor = false; MinBtn.Parent = TopBar
 
--- Tab Bar (Opções na linha)
 local TabBar = Instance.new("Frame")
+TabBar.Name = "TabBar"
 TabBar.Size = UDim2.new(1, -20, 0, 40)
 TabBar.Position = UDim2.new(0, 10, 0, 52)
 TabBar.BackgroundColor3 = Theme.TabBarBg
@@ -233,6 +243,7 @@ local function criarAba(texto, layoutOrder)
     btn.AutoButtonColor = false
     btn.LayoutOrder = layoutOrder
     btn.Parent = TabBar
+    
     local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, 6); corner.Parent = btn
     return btn
 end
@@ -248,7 +259,7 @@ AbaPrincipal.BackgroundColor3 = Theme.Accent
 AbaPrincipal.BackgroundTransparency = 0
 AbaPrincipal.TextColor3 = Theme.TextActive
 AbaPrincipal.Font = Enum.Font.GothamBold-- ============================================================
--- PARTE 3: ÁREA DE CONTEÚDO, TOGGLES E CRÉDITOS
+-- PARTE 3: ÁREA DE CONTEÚDO, PÁGINAS E TOGGLES
 -- ============================================================
 local ContentArea = Instance.new("Frame")
 ContentArea.Size = UDim2.new(1, -20, 1, -105)
@@ -267,10 +278,10 @@ PageTitle.TextColor3 = Color3.fromRGB(60, 35, 90)
 PageTitle.Font = Enum.Font.GothamBold; PageTitle.TextSize = 32
 PageTitle.ZIndex = 1; PageTitle.Parent = ContentArea
 
--- Função Toggle
 local function criarToggle(parent, texto, layoutOrder, callback)
     local row = Instance.new("Frame")
-    row.Size = UDim2.new(1, -20, 0, 40); row.BackgroundColor3 = Color3.fromRGB(22, 15, 35)
+    row.Size = UDim2.new(1, -20, 0, 40) 
+    row.BackgroundColor3 = Color3.fromRGB(22, 15, 35)
     row.BorderSizePixel = 0; row.LayoutOrder = layoutOrder; row.ZIndex = 2; row.Parent = parent
     
     local rowC = Instance.new("UICorner"); rowC.CornerRadius = UDim.new(0, 6); rowC.Parent = row
@@ -309,7 +320,6 @@ local function criarToggle(parent, texto, layoutOrder, callback)
     end)
 end
 
--- Criação das Páginas
 local function criarPagina()
     local p = Instance.new("Frame")
     p.Size = UDim2.new(1, -20, 1, -60); p.Position = UDim2.new(0, 10, 0, 50)
@@ -327,7 +337,7 @@ local PageExtras = criarPagina()
 -- Página de Créditos
 local PageCreditos = Instance.new("Frame")
 PageCreditos.Size = UDim2.new(1, -20, 1, -60); PageCreditos.Position = UDim2.new(0, 10, 0, 50)
-PageCreditos.BackgroundTransparency = 1; PageCreditos.Visible = false; PageCreditos.Parent = ContentArea
+PageCreditos.BackgroundTransparency = 1; PageCredros.Visible = false; PageCreditos.Parent = ContentArea
 
 local CreditosLayout = Instance.new("UIListLayout")
 CreditosLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
@@ -346,17 +356,36 @@ NomesLabel.Font = Enum.Font.GothamBlack; NomesLabel.TextSize = 32; NomesLabel.ZI
 
 local NomesStroke = Instance.new("UIStroke"); NomesStroke.Thickness = 2; NomesStroke.Color = Color3.fromRGB(0, 0, 0); NomesStroke.Transparency = 0.3; NomesStroke.Parent = NomesLabel
 local NomesGradient = Instance.new("UIGradient")
-NomesGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Theme.Accent), ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 255))})
+NomesGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Theme.Accent), 
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 255)) 
+})
 NomesGradient.Parent = NomesLabel-- ============================================================
--- PARTE 4: BOTÕES, LÓGICA DAS ABAS E ARRASTAR
+-- PARTE 4: AVISO KOKUSEN/SIDE, TOGGLES E LÓGICA FINAL
 -- ============================================================
 
--- Toggles da Página Principal
+-- AVISO VISUAL "kokusen/side"
+local RotuloKokusen = Instance.new("TextLabel")
+RotuloKokusen.Size = UDim2.new(0, 120, 0, 30)
+RotuloKokusen.BackgroundColor3 = Theme.Background
+RotuloKokusen.BackgroundTransparency = 0.3
+RotuloKokusen.Text = "kokusen/side"
+RotuloKokusen.TextColor3 = Theme.Accent 
+RotuloKokusen.Font = Enum.Font.GothamBold
+RotuloKokusen.TextSize = 13
+RotuloKokusen.LayoutOrder = 0 
+RotuloKokusen.ZIndex = 3
+RotuloKokusen.Parent = PageKokusen
+
+local RotuloCorner = Instance.new("UICorner"); RotuloCorner.CornerRadius = UDim.new(0, 6); RotuloCorner.Parent = RotuloKokusen
+local RotuloStroke = Instance.new("UIStroke"); RotuloStroke.Color = Theme.LineColor; RotuloStroke.Thickness = 1; RotuloStroke.Transparency = 0.5; RotuloStroke.Parent = RotuloKokusen
+
+-- Adicionando os Toggles (Principal)
 criarToggle(PagePrincipal, "Gojo Kill All", 1)
 criarToggle(PagePrincipal, "Mahito Ult Inf", 2)
 criarToggle(PagePrincipal, "Hakari 60% ult", 3)
 
--- Toggles da Página Kokusen
+-- Adicionando os Toggles (Kokusen)
 criarToggle(PageKokusen, "Ativar Auto Kokusen", 1, function(estado)
     KokusenAtivo = estado
 end)
@@ -365,7 +394,6 @@ criarToggle(PageKokusen, "Aumentar Distância", 2, function(estado)
     if estado then DistanciaDetectcao = 60 else DistanciaDetectcao = 30 end
 end)
 
--- NOVO TOGGLE DO SIDE DASH AQUI:
 criarToggle(PageKokusen, "Fazer Side Dash (Teleporte)", 3, function(estado)
     SideDashAtivo = estado
 end)
@@ -398,7 +426,7 @@ AbaTeleporte.MouseButton1Click:Connect(function() MudarAba(AbaTeleporte, PageTel
 AbaExtras.MouseButton1Click:Connect(function() MudarAba(AbaExtras, PageExtras, "Extras") end)
 AbaCreditos.MouseButton1Click:Connect(function() MudarAba(AbaCreditos, PageCreditos, "Créditos") end)
 
--- Sistema de Arrastar e Minimizar
+-- Minimizar / Restaurar e Arrastar
 local MiniPanel = Instance.new("TextButton")
 MiniPanel.Size = UDim2.new(1, 0, 1, 0); MiniPanel.BackgroundTransparency = 1
 MiniPanel.Text = ""; MiniPanel.Visible = false; MiniPanel.ZIndex = 10; MiniPanel.Parent = MainFrame
@@ -451,4 +479,4 @@ end
 MinBtn.MouseButton1Click:Connect(function() if not isMinimized then Minimizar() end end)
 MiniPanel.MouseButton1Click:Connect(function() if isMinimized then Restaurar() end end)
 
-print("🟣 Aether Hub carregado com Side Dash configurável!")
+print("🟣 Aether Hub carregado com sucesso!")
