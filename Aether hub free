@@ -337,7 +337,7 @@ local PageExtras = criarPagina()
 -- Página de Créditos
 local PageCreditos = Instance.new("Frame")
 PageCreditos.Size = UDim2.new(1, -20, 1, -60); PageCreditos.Position = UDim2.new(0, 10, 0, 50)
-PageCreditos.BackgroundTransparency = 1; PageCredros.Visible = false; PageCreditos.Parent = ContentArea
+PageCreditos.BackgroundTransparency = 1; PageCreditos.Visible = false; PageCreditos.Parent = ContentArea
 
 local CreditosLayout = Instance.new("UIListLayout")
 CreditosLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
@@ -364,19 +364,21 @@ NomesGradient.Parent = NomesLabel-- ============================================
 -- PARTE 4: AVISO KOKUSEN/SIDE, TOGGLES E LÓGICA FINAL
 -- ============================================================
 
--- AVISO VISUAL "kokusen/side"
+-- CABEÇALHO VISUAL "kokusen/side" (Não clicável)
 local RotuloKokusen = Instance.new("TextLabel")
-RotuloKokusen.Size = UDim2.new(0, 120, 0, 30)
-RotuloKokusen.BackgroundColor3 = Theme.Background
-RotuloKokusen.BackgroundTransparency = 0.3
-RotuloKokusen.Text = "kokusen/side"
-RotuloKokusen.TextColor3 = Theme.Accent 
+RotuloKokusen.Size = UDim2.new(1, 0, 0, 30) -- Ocupa toda a largura
+RotuloKokusen.BackgroundColor3 = Theme.TabBarBg -- Cor de fundo escura para destaque
+RotuloKokusen.BackgroundTransparency = 0.2
+RotuloKokusen.Text = "  kokusen/side" -- Espaço no início para margem
+RotuloKokusen.TextColor3 = Theme.Accent -- Roxo Neon
 RotuloKokusen.Font = Enum.Font.GothamBold
-RotuloKokusen.TextSize = 13
-RotuloKokusen.LayoutOrder = 0 
+RotuloKokusen.TextSize = 14
+RotuloKokusen.TextXAlignment = Enum.TextXAlignment.Left -- Texto alinhado à esquerda
+RotuloKokusen.LayoutOrder = 0 -- Fica em cima de tudo
 RotuloKokusen.ZIndex = 3
 RotuloKokusen.Parent = PageKokusen
 
+-- Detalhes visuais do cabeçalho
 local RotuloCorner = Instance.new("UICorner"); RotuloCorner.CornerRadius = UDim.new(0, 6); RotuloCorner.Parent = RotuloKokusen
 local RotuloStroke = Instance.new("UIStroke"); RotuloStroke.Color = Theme.LineColor; RotuloStroke.Thickness = 1; RotuloStroke.Transparency = 0.5; RotuloStroke.Parent = RotuloKokusen
 
