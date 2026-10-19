@@ -1028,7 +1028,7 @@ SubmitButton.Parent = KeyFrame
 local SBC = Instance.new("UICorner"); SBC.CornerRadius = UDim.new(0, 8); SBC.Parent = SubmitButton
 
 SubmitButton.MouseButton1Click:Connect(function()
-    if KeyInput.Text == KEY_VALIDA then
+    if KeyInput.Text == "AETHER-X" then
         KeyGui.Enabled = false
         MainFrame.Visible = true
     else
