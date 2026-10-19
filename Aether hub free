@@ -9,19 +9,19 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
--- Variáveis Página 1 (Principal)
+-- Variáveis Principal
 local FlyAtivo = false
 local NoclipAtivo = false
 local SpeedAtual = 16
 local JumpAtual = 50
 local FlySpeed = 50
 
--- Variáveis Página 3 (Kokusen)
+-- Variáveis Kokusen
 local Kokusen1Ativo = false
 local ModoPrasCostas = true
 local DistanciaDetectcao = 30
 local Kokusen2Ativo = false
-local KokusenSpeed = 10 -- Velocidade do dash
+local KokusenSpeed = 10
 local UltimoUso = 0
 
 local v15
@@ -80,7 +80,7 @@ local function f4(p3, p4, p5)
     humanoid2.AutoRotate = false
     local v9 = tick()
     local position = humanoidRootPart2.Position
-    local v10 = p5 or KokusenSpeed -- Usa a variável do slider
+    local v10 = p5 or KokusenSpeed
     local connect = nil
     connect = RunService.RenderStepped:Connect(function()
         if not p3 or not p3.Parent then
@@ -411,10 +411,61 @@ local NomesStroke = Instance.new("UIStroke"); NomesStroke.Thickness = 2; NomesSt
 local NomesGradient = Instance.new("UIGradient")
 NomesGradient.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Theme.Accent), ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 255)) })
 NomesGradient.Parent = NomesLabel-- ============================================================
--- PARTE 4: POPULANDO AS PÁGINAS E LÓGICA FINAL
+-- PARTE 4: BYPASS, SISTEMAS E FINALIZAÇÃO
 -- ============================================================
 
--- Sistema de Fly e Noclip
+-- === SISTEMA DE BYPASS ===
+local lp = LocalPlayer
+local bypassActive = false
+local bypassConn = nil
+
+local function ExecutarBypass()
+    local char = lp.Character or lp.CharacterAdded:Wait()
+    local root = char:WaitForChild("HumanoidRootPart", 5)
+    if not root then return false end
+
+    local sucesso = false
+    pcall(function()
+        local jogadores = Players:GetPlayers()
+        for i = #jogadores, 1, -1 do
+            if jogadores[i] == lp then table.remove(jogadores, i) end
+        end
+        if #jogadores > 0 then
+            local alvo = jogadores[math.random(1, #jogadores)]
+            if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+                local posAlvo = alvo.Character.HumanoidRootPart.Position + Vector3.new(0, 3, 0)
+                root.CFrame = CFrame.new(posAlvo)
+                task.wait(0.5)
+                if root and root.Parent and (root.Position - posAlvo).Magnitude < 25 then
+                    sucesso = true
+                end
+            end
+        end
+    end)
+    return sucesso
+end
+
+local function rotaDoVoid()
+    pcall(function()
+        local char = lp.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        local hum  = char and char:FindFirstChildOfClass("Humanoid")
+        if not root or not hum then return end
+        hum.PlatformStand = true
+        local bv = Instance.new("BodyVelocity")
+        bv.MaxForce = Vector3.new(9e6, 9e6, 9e6)
+        bv.Velocity = Vector3.new(0, 150, 0)
+        bv.Parent = root
+        task.wait(1.3)
+        bv.Velocity = Vector3.new(-300, 0, 0)
+        task.wait(2.4)
+        bv.Velocity = Vector3.zero
+        hum.PlatformStand = false
+        bv:Destroy()
+    end)
+end
+
+-- Sistema de Fly
 local flyConnection
 local function toggleFly(state)
     FlyAtivo = state
@@ -435,10 +486,12 @@ local function toggleFly(state)
             if not FlyAtivo then return end
             local cam = workspace.CurrentCamera
             local dir = Vector3.new(0,0,0)
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
+            
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Up) then dir += cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.Down) then dir -= cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Left) or UserInputService:IsKeyDown(Enum.KeyCode.Comma) then dir -= cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) or UserInputService:IsKeyDown(Enum.KeyCode.Right) or UserInputService:IsKeyDown(Enum.KeyCode.Period) then dir += cam.CFrame.RightVector end
+            
             if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
             if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then dir -= Vector3.new(0,1,0) end
             
@@ -452,7 +505,18 @@ local function toggleFly(state)
     end
 end
 
-local noclipConnection = RunService.Stepped:Connect(function()
+-- Loop que força Speed e Jump (Para funcionar no Jujutsu Shenanigans)
+RunService.Stepped:Connect(function()
+    if LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            if hum.WalkSpeed ~= SpeedAtual then hum.WalkSpeed = SpeedAtual end
+            if hum.JumpPower ~= JumpAtual then
+                hum.UseJumpPower = true
+                hum.JumpPower = JumpAtual
+            end
+        end
+    end
     if NoclipAtivo and LocalPlayer.Character then
         for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
             if v:IsA("BasePart") and v.CanCollide then v.CanCollide = false end
@@ -460,24 +524,75 @@ local noclipConnection = RunService.Stepped:Connect(function()
     end
 end)
 
--- --- PÁGINA PRINCIPAL ---
-criarToggle(PagePrincipal, "Ativar Fly", 1, function(state) toggleFly(state) end)
-criarToggle(PagePrincipal, "Ativar Noclip", 2, function(state) NoclipAtivo = state end)
-criarSlider(PagePrincipal, "Velocidade (Speed)", 1, 100, SpeedAtual, 3, function(val)
-    SpeedAtual = val
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed = val
-    end
-end)
-criarSlider(PagePrincipal, "Força do Pulo (Jump)", 1, 100, JumpAtual, 4, function(val)
-    JumpAtual = val
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-        LocalPlayer.Character.Humanoid.UseJumpPower = true
-        LocalPlayer.Character.Humanoid.JumpPower = val
+-- ==========================================
+-- CRIANDO OS CABEÇALHOS E OPÇÕES NA PRINCIPAL
+-- ==========================================
+
+-- 1. Cabeçalho "Bypass" (LayoutOrder 0)
+local HeaderBypass = Instance.new("TextLabel")
+HeaderBypass.Size = UDim2.new(1, -5, 0, 30); HeaderBypass.BackgroundColor3 = Theme.TabBarBg
+HeaderBypass.BackgroundTransparency = 0.2; HeaderBypass.Text = "  Bypass"
+HeaderBypass.TextColor3 = Theme.Accent; HeaderBypass.Font = Enum.Font.GothamBold
+HeaderBypass.TextSize = 14; HeaderBypass.TextXAlignment = Enum.TextXAlignment.Left
+HeaderBypass.LayoutOrder = 0; HeaderBypass.ZIndex = 3; HeaderBypass.Parent = PagePrincipal
+Instance.new("UICorner", HeaderBypass).CornerRadius = UDim.new(0, 6)
+local StrokeBypass = Instance.new("UIStroke", HeaderBypass); StrokeBypass.Color = Theme.LineColor; StrokeBypass.Thickness = 1; StrokeBypass.Transparency = 0.5
+
+-- 2. Botão do Bypass (LayoutOrder 1)
+criarToggle(PagePrincipal, "Bypass (Auto)", 1, function(ativo)
+    bypassActive = ativo
+    if ativo then
+        bypassConn = task.spawn(function()
+            while bypassActive do
+                local sucesso = ExecutarBypass()
+                if sucesso then
+                    bypassActive = false
+                    print("✅ Bypass FUNCIONOU!")
+                    break
+                else
+                    rotaDoVoid()
+                    task.wait(3)
+                end
+            end
+            bypassActive = false
+        end)
+    else
+        if bypassConn then task.cancel(bypassConn); bypassConn = nil end
     end
 end)
 
--- --- PÁGINA KOKUSEN ---
+-- 3. Cabeçalho "Script" (LayoutOrder 2)
+local HeaderScript = Instance.new("TextLabel")
+HeaderScript.Size = UDim2.new(1, -5, 0, 30); HeaderScript.BackgroundColor3 = Theme.TabBarBg
+HeaderScript.BackgroundTransparency = 0.2; HeaderScript.Text = "  Script"
+HeaderScript.TextColor3 = Theme.Accent; HeaderScript.Font = Enum.Font.GothamBold
+HeaderScript.TextSize = 14; HeaderScript.TextXAlignment = Enum.TextXAlignment.Left
+HeaderScript.LayoutOrder = 2; HeaderScript.ZIndex = 3; HeaderScript.Parent = PagePrincipal
+Instance.new("UICorner", HeaderScript).CornerRadius = UDim.new(0, 6)
+local StrokeScript = Instance.new("UIStroke", HeaderScript); StrokeScript.Color = Theme.LineColor; StrokeScript.Thickness = 1; StrokeScript.Transparency = 0.5
+
+-- 4. Toggles Fly e Noclip (LayoutOrder 3 e 4)
+criarToggle(PagePrincipal, "Ativar Fly (Setas <> / WASD)", 3, function(state) toggleFly(state) end)
+criarToggle(PagePrincipal, "Ativar Noclip", 4, function(state) NoclipAtivo = state end)
+
+-- 5. Cabeçalho "Configurações" (LayoutOrder 5)
+local HeaderConfig = Instance.new("TextLabel")
+HeaderConfig.Size = UDim2.new(1, -5, 0, 30); HeaderConfig.BackgroundColor3 = Theme.TabBarBg
+HeaderConfig.BackgroundTransparency = 0.2; HeaderConfig.Text = "  Configurações"
+HeaderConfig.TextColor3 = Theme.Accent; HeaderConfig.Font = Enum.Font.GothamBold
+HeaderConfig.TextSize = 14; HeaderConfig.TextXAlignment = Enum.TextXAlignment.Left
+HeaderConfig.LayoutOrder = 5; HeaderConfig.ZIndex = 3; HeaderConfig.Parent = PagePrincipal
+Instance.new("UICorner", HeaderConfig).CornerRadius = UDim.new(0, 6)
+local StrokeConfig = Instance.new("UIStroke", HeaderConfig); StrokeConfig.Color = Theme.LineColor; StrokeConfig.Thickness = 1; StrokeConfig.Transparency = 0.5
+
+-- 6. Sliders Speed e Jump (LayoutOrder 6 e 7)
+criarSlider(PagePrincipal, "Velocidade (Speed)", 1, 100, SpeedAtual, 6, function(val) SpeedAtual = val end)
+criarSlider(PagePrincipal, "Força do Pulo (Jump)", 1, 100, JumpAtual, 7, function(val) JumpAtual = val end)
+
+
+-- ==========================================
+-- POPULANDO A PÁGINA KOKUSEN
+-- ==========================================
 local RotuloKokusen = Instance.new("TextLabel")
 RotuloKokusen.Size = UDim2.new(1, -5, 0, 30); RotuloKokusen.BackgroundColor3 = Theme.TabBarBg
 RotuloKokusen.BackgroundTransparency = 0.2; RotuloKokusen.Text = "  kokusen/side"
@@ -490,15 +605,8 @@ local RotuloStroke = Instance.new("UIStroke", RotuloKokusen); RotuloStroke.Color
 criarToggle(PageKokusen, "Auto Kokusen (Sem Disfarçar)", 1, function(estado) Kokusen1Ativo = estado end)
 criarToggle(PageKokusen, "Modo: Pras Costas", 2, function(estado) ModoPrasCostas = estado end)
 criarToggle(PageKokusen, "Auto Kokusen (Disfarçado/Dash)", 3, function(estado) Kokusen2Ativo = estado end)
-
-criarSlider(PageKokusen, "Distância de Detecção", 5, 100, DistanciaDetectcao, 4, function(val)
-    DistanciaDetectcao = val
-end)
-
-criarSlider(PageKokusen, "Velocidade do Dash (Kokusen)", 1, 100, KokusenSpeed, 5, function(val)
-    KokusenSpeed = val
-end)
-
+criarSlider(PageKokusen, "Distância de Detecção", 5, 100, DistanciaDetectcao, 4, function(val) DistanciaDetectcao = val end)
+criarSlider(PageKokusen, "Velocidade do Dash (Kokusen)", 1, 100, KokusenSpeed, 5, function(val) KokusenSpeed = val end)
 
 -- ============================================================
 -- LÓGICA DAS ABAS E FINALIZAÇÃO
@@ -577,4 +685,4 @@ end
 MinBtn.MouseButton1Click:Connect(function() if not isMinimized then Minimizar() end end)
 MiniPanel.MouseButton1Click:Connect(function() if isMinimized then Restaurar() end end)
 
-print("🟣 Aether Hub atualizado com Fly, Noclip, Speed, Jump e Kokusen Slider!")
+print("🟣 Aether Hub atualizado com Bypass no topo!")
