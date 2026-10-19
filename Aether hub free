@@ -1,5 +1,5 @@
 -- ============================================================
--- PARTE 1: SERVIÇOS E LÓGICA DO HOOK
+-- PARTE 1: SERVIÇOS, VARIÁVEIS E HOOK DO KOKUSEN
 -- ============================================================
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
@@ -9,13 +9,19 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
--- Variáveis Página 1
+-- Variáveis Página 1 (Principal)
+local FlyAtivo = false
+local NoclipAtivo = false
+local SpeedAtual = 16
+local JumpAtual = 50
+local FlySpeed = 50
+
+-- Variáveis Página 3 (Kokusen)
 local Kokusen1Ativo = false
 local ModoPrasCostas = true
 local DistanciaDetectcao = 30
-
--- Variáveis Página 2
 local Kokusen2Ativo = false
+local KokusenSpeed = 10 -- Velocidade do dash
 local UltimoUso = 0
 
 local v15
@@ -74,7 +80,7 @@ local function f4(p3, p4, p5)
     humanoid2.AutoRotate = false
     local v9 = tick()
     local position = humanoidRootPart2.Position
-    local v10 = p5 or 10
+    local v10 = p5 or KokusenSpeed -- Usa a variável do slider
     local connect = nil
     connect = RunService.RenderStepped:Connect(function()
         if not p3 or not p3.Parent then
@@ -132,7 +138,7 @@ if v15 and hookmetamethod then
                 if not v24 then return end
                 local hrpAlvo = v24:FindFirstChild("HumanoidRootPart")
                 if not hrpAlvo then return end
-                f4(hrpAlvo, 0.31, 10) 
+                f4(hrpAlvo, 0.31, KokusenSpeed) 
             end)
         end
         
@@ -254,7 +260,7 @@ AbaPrincipal.BackgroundColor3 = Theme.Accent
 AbaPrincipal.BackgroundTransparency = 0
 AbaPrincipal.TextColor3 = Theme.TextActive
 AbaPrincipal.Font = Enum.Font.GothamBold-- ============================================================
--- PARTE 3: ÁREA DE CONTEÚDO, PÁGINAS E TOGGLES
+-- PARTE 3: FUNÇÕES DE UI (TOGGLES, SLIDERS E PÁGINAS)
 -- ============================================================
 local ContentArea = Instance.new("Frame")
 ContentArea.Size = UDim2.new(1, -20, 1, -105)
@@ -273,6 +279,7 @@ PageTitle.TextColor3 = Color3.fromRGB(60, 35, 90)
 PageTitle.Font = Enum.Font.GothamBold; PageTitle.TextSize = 32
 PageTitle.ZIndex = 1; PageTitle.Parent = ContentArea
 
+-- Função Toggle
 local function criarToggle(parent, texto, layoutOrder, callback)
     local row = Instance.new("Frame")
     row.Size = UDim2.new(1, -20, 0, 40) 
@@ -313,10 +320,55 @@ local function criarToggle(parent, texto, layoutOrder, callback)
         end
         if callback then callback(isToggled) end
     end)
-    
-    return btn -- Retornando o botão para controlar o outro toggle
 end
 
+-- Função Slider
+local function criarSlider(parent, texto, min, max, padrao, layoutOrder, callback)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, -20, 0, 45)
+    container.BackgroundColor3 = Color3.fromRGB(22, 15, 35)
+    container.BorderSizePixel = 0; container.LayoutOrder = layoutOrder; container.ZIndex = 2; container.Parent = parent
+    Instance.new("UICorner", container).CornerRadius = UDim.new(0, 6)
+    local str = Instance.new("UIStroke", container); str.Color = Theme.LineColor; str.Thickness = 1; str.Transparency = 0.5
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -20, 0, 20); label.Position = UDim2.new(0, 10, 0, 4)
+    label.BackgroundTransparency = 1; label.Text = texto .. ": " .. padrao
+    label.TextColor3 = Theme.Text; label.Font = Enum.Font.GothamMedium; label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left; label.ZIndex = 3; label.Parent = container
+
+    local barBg = Instance.new("Frame")
+    barBg.Size = UDim2.new(0.9, 0, 0, 6); barBg.Position = UDim2.new(0.05, 0, 0, 30)
+    barBg.BackgroundColor3 = Color3.fromRGB(50, 50, 60); barBg.BorderSizePixel = 0; barBg.ZIndex = 3; barBg.Parent = container
+    Instance.new("UICorner", barBg).CornerRadius = UDim.new(1, 0)
+
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new((padrao - min) / (max - min), 0, 1, 0)
+    fill.BackgroundColor3 = Theme.Accent; fill.BorderSizePixel = 0; fill.ZIndex = 4; fill.Parent = barBg
+    Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+
+    local handle = Instance.new("TextButton")
+    handle.Size = UDim2.new(0, 20, 0, 20); handle.Position = UDim2.new((padrao - min) / (max - min), -10, 0.5, -10)
+    handle.BackgroundTransparency = 1; handle.Text = "●"; handle.TextColor3 = Theme.Text
+    handle.Font = Enum.Font.GothamBold; handle.TextSize = 18; handle.ZIndex = 5; handle.Parent = barBg
+
+    local arrastando = false
+    local function update(input)
+        local pX = math.clamp((input.Position.X - barBg.AbsolutePosition.X) / barBg.AbsoluteSize.X, 0, 1)
+        fill.Size = UDim2.new(pX, 0, 1, 0)
+        handle.Position = UDim2.new(pX, -10, 0.5, -10)
+        local valor = math.floor(min + ((max - min) * pX))
+        label.Text = texto .. ": " .. valor
+        if callback then callback(valor) end
+    end
+
+    handle.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then arrastando = true end end)
+    barBg.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then arrastando = true; update(i) end end)
+    UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then arrastando = false end end)
+    UserInputService.InputChanged:Connect(function(i) if arrastando and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then update(i) end end)
+end
+
+-- Função da Página com Scroll
 local function criarPagina()
     local p = Instance.new("ScrollingFrame")
     p.Size = UDim2.new(1, -20, 1, -60); p.Position = UDim2.new(0, 10, 0, 50)
@@ -324,7 +376,6 @@ local function criarPagina()
     p.ScrollBarThickness = 4; p.ScrollBarImageColor3 = Theme.Accent
     p.CanvasSize = UDim2.new(0, 0, 0, 0); p.AutomaticCanvasSize = Enum.AutomaticSize.Y
     p.ScrollingDirection = Enum.ScrollingDirection.Y
-    
     local layout = Instance.new("UIListLayout"); layout.Padding = UDim.new(0, 6); layout.SortOrder = Enum.SortOrder.LayoutOrder; layout.Parent = p
     local padding = Instance.new("UIPadding"); padding.PaddingRight = UDim.new(0, 5); padding.Parent = p
     return p
@@ -360,101 +411,98 @@ local NomesStroke = Instance.new("UIStroke"); NomesStroke.Thickness = 2; NomesSt
 local NomesGradient = Instance.new("UIGradient")
 NomesGradient.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Theme.Accent), ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 255)) })
 NomesGradient.Parent = NomesLabel-- ============================================================
--- PARTE 4: NOVAS OPÇÕES, SLIDER E LÓGICA FINAL
+-- PARTE 4: POPULANDO AS PÁGINAS E LÓGICA FINAL
 -- ============================================================
 
--- Cabeçalho kokusen/side
+-- Sistema de Fly e Noclip
+local flyConnection
+local function toggleFly(state)
+    FlyAtivo = state
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    if state then
+        local bv = Instance.new("BodyVelocity", hrp)
+        bv.Name = "AetherFly"
+        bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+        local bg = Instance.new("BodyGyro", hrp)
+        bg.Name = "AetherGyro"
+        bg.P = 1e4; bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5); bg.CFrame = hrp.CFrame
+
+        flyConnection = RunService.RenderStepped:Connect(function()
+            if not FlyAtivo then return end
+            local cam = workspace.CurrentCamera
+            local dir = Vector3.new(0,0,0)
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then dir -= Vector3.new(0,1,0) end
+            
+            if dir.Magnitude > 0 then bv.Velocity = dir.Unit * FlySpeed else bv.Velocity = Vector3.new(0,0,0) end
+            bg.CFrame = cam.CFrame
+        end)
+    else
+        if flyConnection then flyConnection:Disconnect() end
+        if hrp:FindFirstChild("AetherFly") then hrp.AetherFly:Destroy() end
+        if hrp:FindFirstChild("AetherGyro") then hrp.AetherGyro:Destroy() end
+    end
+end
+
+local noclipConnection = RunService.Stepped:Connect(function()
+    if NoclipAtivo and LocalPlayer.Character then
+        for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+            if v:IsA("BasePart") and v.CanCollide then v.CanCollide = false end
+        end
+    end
+end)
+
+-- --- PÁGINA PRINCIPAL ---
+criarToggle(PagePrincipal, "Ativar Fly", 1, function(state) toggleFly(state) end)
+criarToggle(PagePrincipal, "Ativar Noclip", 2, function(state) NoclipAtivo = state end)
+criarSlider(PagePrincipal, "Velocidade (Speed)", 1, 100, SpeedAtual, 3, function(val)
+    SpeedAtual = val
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = val
+    end
+end)
+criarSlider(PagePrincipal, "Força do Pulo (Jump)", 1, 100, JumpAtual, 4, function(val)
+    JumpAtual = val
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character.Humanoid.UseJumpPower = true
+        LocalPlayer.Character.Humanoid.JumpPower = val
+    end
+end)
+
+-- --- PÁGINA KOKUSEN ---
 local RotuloKokusen = Instance.new("TextLabel")
 RotuloKokusen.Size = UDim2.new(1, -5, 0, 30); RotuloKokusen.BackgroundColor3 = Theme.TabBarBg
 RotuloKokusen.BackgroundTransparency = 0.2; RotuloKokusen.Text = "  kokusen/side"
 RotuloKokusen.TextColor3 = Theme.Accent; RotuloKokusen.Font = Enum.Font.GothamBold
 RotuloKokusen.TextSize = 14; RotuloKokusen.TextXAlignment = Enum.TextXAlignment.Left
 RotuloKokusen.LayoutOrder = 0; RotuloKokusen.ZIndex = 3; RotuloKokusen.Parent = PageKokusen
-local RotuloCorner = Instance.new("UICorner"); RotuloCorner.CornerRadius = UDim.new(0, 6); RotuloCorner.Parent = RotuloKokusen
-local RotuloStroke = Instance.new("UIStroke"); RotuloStroke.Color = Theme.LineColor; RotuloStroke.Thickness = 1; RotuloStroke.Transparency = 0.5; RotuloStroke.Parent = RotuloKokusen
+Instance.new("UICorner", RotuloKokusen).CornerRadius = UDim.new(0, 6)
+local RotuloStroke = Instance.new("UIStroke", RotuloKokusen); RotuloStroke.Color = Theme.LineColor; RotuloStroke.Thickness = 1; RotuloStroke.Transparency = 0.5
 
--- Adicionando os Toggles com a lógica de exclusividade
-local ToggleKokusen1 = criarToggle(PageKokusen, "Auto Kokusen (Sem Disfarçar)", 1, function(estado)
-    Kokusen1Ativo = estado
-    if estado and Kokusen2Ativo then
-        Kokusen2Ativo = false
-        -- Desliga visualmente o outro toggle (Simulação visual)
-        local toggle2Visual = PageKokusen:FindFirstChild("Toggle2Visual") -- Não temos uma referência direta aqui, mas a lógica de Hook impede o uso duplo
-    end
+criarToggle(PageKokusen, "Auto Kokusen (Sem Disfarçar)", 1, function(estado) Kokusen1Ativo = estado end)
+criarToggle(PageKokusen, "Modo: Pras Costas", 2, function(estado) ModoPrasCostas = estado end)
+criarToggle(PageKokusen, "Auto Kokusen (Disfarçado/Dash)", 3, function(estado) Kokusen2Ativo = estado end)
+
+criarSlider(PageKokusen, "Distância de Detecção", 5, 100, DistanciaDetectcao, 4, function(val)
+    DistanciaDetectcao = val
 end)
 
-local ToggleCostas = criarToggle(PageKokusen, "Modo: Pras Costas", 2, function(estado)
-    ModoPrasCostas = estado
+criarSlider(PageKokusen, "Velocidade do Dash (Kokusen)", 1, 100, KokusenSpeed, 5, function(val)
+    KokusenSpeed = val
 end)
 
-local ToggleKokusen2 = criarToggle(PageKokusen, "Auto Kokusen (Disfarçado/Dash)", 3, function(estado)
-    Kokusen2Ativo = estado
-    if estado and Kokusen1Ativo then
-        Kokusen1Ativo = false
-    end
-end)
 
--- Lógica do Slider de Distância
-local SliderLabel = Instance.new("TextLabel")
-SliderLabel.Size = UDim2.new(1, -20, 0, 20)
-SliderLabel.Position = UDim2.new(0, 10, 0, 180) -- Posição fixa embaixo dos toggles
-SliderLabel.BackgroundTransparency = 1
-SliderLabel.Text = "Distância: " .. DistanciaDetectcao .. " studs"
-SliderLabel.TextColor3 = Theme.Text
-SliderLabel.Font = Enum.Font.GothamMedium
-SliderLabel.TextSize = 13
-SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
-SliderLabel.ZIndex = 3
-SliderLabel.Parent = PageKokusen
-
-local SliderBg = Instance.new("Frame")
-SliderBg.Size = UDim2.new(0.9, 0, 0, 6)
-SliderBg.Position = UDim2.new(0.05, 0, 0, 210)
-SliderBg.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
-SliderBg.BorderSizePixel = 0
-SliderBg.ZIndex = 3
-SliderBg.Parent = PageKokusen
-Instance.new("UICorner", SliderBg).CornerRadius = UDim.new(1, 0)
-
-local SliderFill = Instance.new("Frame")
-SliderFill.Size = UDim2.new((DistanciaDetectcao - 5) / 45, 0, 1, 0)
-SliderFill.BackgroundColor3 = Theme.Accent
-SliderFill.BorderSizePixel = 0
-SliderFill.ZIndex = 4
-SliderFill.Parent = SliderBg
-Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
-
-local Handle = Instance.new("TextButton")
-Handle.Size = UDim2.new(0, 24, 0, 24)
-Handle.Position = UDim2.new((DistanciaDetectcao - 5) / 45, -12, 0.5, -12)
-Handle.BackgroundTransparency = 1
-Handle.Text = "●"
-Handle.TextColor3 = Theme.Text
-Handle.Font = Enum.Font.GothamBold
-Handle.TextSize = 22
-Handle.ZIndex = 5
-Handle.Parent = SliderBg
-
--- Arrastar Slider
-local SliderArrastando = false
-local function AtualizarSlider(input)
-    local pX = math.clamp((input.Position.X - SliderBg.AbsolutePosition.X) / SliderBg.AbsoluteSize.X, 0, 1)
-    SliderFill.Size = UDim2.new(pX, 0, 1, 0)
-    Handle.Position = UDim2.new(pX, -12, 0.5, -12)
-    DistanciaDetectcao = math.floor(5 + 45 * pX)
-    SliderLabel.Text = "Distância: " .. DistanciaDetectcao .. " studs"
-end
-
-Handle.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then SliderArrastando = true end end)
-SliderBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then SliderArrastando = true; AtualizarSlider(input) end end)
-UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then SliderArrastando = false end end)
-UserInputService.InputChanged:Connect(function(input) if SliderArrastando and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then AtualizarSlider(input) end end)
-
--- Toggles da Página Principal
-criarToggle(PagePrincipal, "Gojo Kill All", 1)
-criarToggle(PagePrincipal, "Mahito Ult Inf", 2)
-
--- Lógica de trocar de aba
+-- ============================================================
+-- LÓGICA DAS ABAS E FINALIZAÇÃO
+-- ============================================================
 local function MudarAba(abaAtiva, paginaAtiva, nomeTitulo)
     local abas = {AbaPrincipal, AbaESP, AbaKokusen, AbaTeleporte, AbaExtras, AbaCreditos}
     local paginas = {PagePrincipal, PageESP, PageKokusen, PageTeleporte, PageExtras, PageCreditos}
@@ -506,7 +554,7 @@ end
 makeDraggable(TopBar); makeDraggable(MiniPanel)
 
 UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging and not SliderArrastando then
+    if input == dragInput and dragging then
         local delta = input.Position - dragStart
         MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
@@ -529,4 +577,4 @@ end
 MinBtn.MouseButton1Click:Connect(function() if not isMinimized then Minimizar() end end)
 MiniPanel.MouseButton1Click:Connect(function() if isMinimized then Restaurar() end end)
 
-print("🟣 Aether Hub atualizado com as novas opções de Kokusen e Slider!")
+print("🟣 Aether Hub atualizado com Fly, Noclip, Speed, Jump e Kokusen Slider!")
