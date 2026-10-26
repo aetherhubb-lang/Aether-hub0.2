@@ -1,0 +1,1841 @@
+-- ============================================================
+-- AETHER HUB MM2 — PARTE 1/12
+-- Config · Tema · Helpers · Tela de Key
+-- ============================================================
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+local Players          = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService     = game:GetService("TweenService")
+local RunService       = game:GetService("RunService")
+local Lighting         = game:GetService("Lighting")
+local LocalPlayer      = Players.LocalPlayer
+
+local KEY = "AETHER-X"
+local CONFIG = { NOME_DONO = "AETHER", OUTROS_NOMES = { "mm2 edition" }, DISCORD = "https://discord.gg/ctBFnM4K8" }
+
+local Theme = {
+    Background = Color3.fromRGB(12, 8, 20), TopBar = Color3.fromRGB(22, 14, 35),
+    TabBarBg = Color3.fromRGB(18, 11, 28), ContentBg = Color3.fromRGB(15, 10, 25),
+    Accent = Color3.fromRGB(190, 100, 255), Text = Color3.fromRGB(230, 220, 255),
+    TextDark = Color3.fromRGB(150, 120, 200), TextActive = Color3.fromRGB(15, 10, 25),
+    LineColor = Color3.fromRGB(90, 50, 140),
+}
+
+local function isMurderer(p)
+    if not p then return false end
+    local bp = p:FindFirstChild("Backpack")
+    if bp and bp:FindFirstChild("Knife") then return true end
+    if p.Character and p.Character:FindFirstChild("Knife") then return true end
+    return false
+end
+local function isSheriff(p)
+    if not p then return false end
+    local bp = p:FindFirstChild("Backpack")
+    if bp and bp:FindFirstChild("Gun") then return true end
+    if p.Character and p.Character:FindFirstChild("Gun") then return true end
+    return false
+end
+local function getHRP()
+    local c = LocalPlayer.Character
+    return c and c:FindFirstChild("HumanoidRootPart")
+end
+
+pcall(function()
+    local pg = LocalPlayer:FindFirstChild("PlayerGui")
+    if pg and pg:FindFirstChild("AetherUI") then pg.AetherUI:Destroy() end
+    if pg and pg:FindFirstChild("AetherKeyGui") then pg.AetherKeyGui:Destroy() end
+end)
+
+local keyGui = Instance.new("ScreenGui")
+keyGui.Name = "AetherKeyGui"; keyGui.ResetOnSpawn = false
+keyGui.IgnoreGuiInset = true; keyGui.DisplayOrder = 999
+keyGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local keyFrame = Instance.new("Frame", keyGui)
+keyFrame.Size = UDim2.new(0, 320, 0, 200)
+keyFrame.Position = UDim2.new(0.5, -160, 0.5, -100)
+keyFrame.BackgroundColor3 = Theme.Background; keyFrame.BorderSizePixel = 0
+Instance.new("UICorner", keyFrame).CornerRadius = UDim.new(0, 14)
+local kfS = Instance.new("UIStroke", keyFrame); kfS.Color = Theme.Accent; kfS.Thickness = 2
+local kfG = Instance.new("UIStroke", keyFrame); kfG.Color = Theme.Accent; kfG.Thickness = 7; kfG.Transparency = 0.75
+
+local keyTitle = Instance.new("TextLabel", keyFrame)
+keyTitle.Text = "Aether Hub"; keyTitle.Font = Enum.Font.GothamBold
+keyTitle.TextSize = 26; keyTitle.TextColor3 = Theme.Accent
+keyTitle.BackgroundTransparency = 1; keyTitle.Size = UDim2.new(1, 0, 0, 36); keyTitle.Position = UDim2.new(0, 0, 0, 14)
+
+local keySub = Instance.new("TextLabel", keyFrame)
+keySub.Text = "Digite a Key para continuar"; keySub.Font = Enum.Font.Gotham
+keySub.TextSize = 13; keySub.TextColor3 = Theme.TextDark; keySub.BackgroundTransparency = 1
+keySub.Size = UDim2.new(1, 0, 0, 20); keySub.Position = UDim2.new(0, 0, 0, 48)
+
+local keyBox = Instance.new("TextBox", keyFrame)
+keyBox.Size = UDim2.new(1, -40, 0, 40); keyBox.Position = UDim2.new(0, 20, 0, 82)
+keyBox.BackgroundColor3 = Theme.TabBarBg; keyBox.TextColor3 = Theme.Text
+keyBox.PlaceholderText = "AETHER-XXXX"; keyBox.PlaceholderColor3 = Theme.TextDark
+keyBox.Font = Enum.Font.Gotham; keyBox.TextSize = 16; keyBox.Text = ""
+keyBox.BorderSizePixel = 0; keyBox.ClearTextOnFocus = false
+Instance.new("UICorner", keyBox).CornerRadius = UDim.new(0, 8)
+local boxStroke = Instance.new("UIStroke", keyBox); boxStroke.Color = Theme.LineColor; boxStroke.Thickness = 1
+
+local keyBtn = Instance.new("TextButton", keyFrame)
+keyBtn.Size = UDim2.new(1, -40, 0, 40); keyBtn.Position = UDim2.new(0, 20, 0, 135)
+keyBtn.BackgroundColor3 = Theme.Accent; keyBtn.Text = "Entrar"
+keyBtn.TextColor3 = Theme.TextActive; keyBtn.Font = Enum.Font.GothamBold; keyBtn.TextSize = 16
+keyBtn.BorderSizePixel = 0
+Instance.new("UICorner", keyBtn).CornerRadius = UDim.new(0, 8)-- ============================================================
+-- AETHER HUB MM2 — PARTE 2/12
+-- ============================================================
+local function buildUI()
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "AetherUI"; ScreenGui.ResetOnSpawn = false
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.DisplayOrder = 998
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+    local TAMANHO_NORMAL = UDim2.new(0, 520, 0, 320)
+    local TAMANHO_MINI   = UDim2.new(0, 60, 0, 60)
+    local POS_NORMAL     = UDim2.new(0.5, -260, 0.5, -160)
+
+    local MainFrame = Instance.new("Frame", ScreenGui)
+    MainFrame.Size = TAMANHO_NORMAL; MainFrame.Position = POS_NORMAL
+    MainFrame.BackgroundColor3 = Theme.Background; MainFrame.BorderSizePixel = 0
+    MainFrame.Active = true; MainFrame.ClipsDescendants = true
+    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+    local MainStroke = Instance.new("UIStroke", MainFrame); MainStroke.Color = Theme.Accent; MainStroke.Thickness = 2
+    local MainGlow = Instance.new("UIStroke", MainFrame); MainGlow.Color = Theme.Accent; MainGlow.Thickness = 8; MainGlow.Transparency = 0.8
+
+    local TopBar = Instance.new("Frame", MainFrame)
+    TopBar.Size = UDim2.new(1, 0, 0, 45); TopBar.BackgroundColor3 = Theme.TopBar
+    TopBar.BackgroundTransparency = 0.35; TopBar.BorderSizePixel = 0; TopBar.Active = true
+    Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 12)
+    local TopFix = Instance.new("Frame", TopBar)
+    TopFix.Size = UDim2.new(1, 0, 0, 12); TopFix.Position = UDim2.new(0, 0, 1, -12)
+    TopFix.BackgroundColor3 = Theme.TopBar; TopFix.BackgroundTransparency = 0.35; TopFix.BorderSizePixel = 0
+
+    local Title = Instance.new("TextLabel", TopBar)
+    Title.Size = UDim2.new(1, -110, 1, 0); Title.Position = UDim2.new(0, 56, 0, 0)
+    Title.BackgroundTransparency = 1; Title.Text = "AETHER HUB"
+    Title.TextColor3 = Theme.Accent; Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 18; Title.TextXAlignment = Enum.TextXAlignment.Left
+
+    local LogoTopo = Instance.new("TextLabel", TopBar)
+    LogoTopo.Size = UDim2.new(0, 34, 0, 34); LogoTopo.Position = UDim2.new(0, 14, 0.5, -17)
+    LogoTopo.BackgroundColor3 = Theme.Accent; LogoTopo.Text = "A"
+    LogoTopo.TextColor3 = Theme.TextActive; LogoTopo.Font = Enum.Font.GothamBlack; LogoTopo.TextSize = 20
+    LogoTopo.ZIndex = 3
+    Instance.new("UICorner", LogoTopo).CornerRadius = UDim.new(0, 8)
+
+    local MinBtn = Instance.new("TextButton", TopBar)
+    MinBtn.Size = UDim2.new(0, 30, 0, 30); MinBtn.Position = UDim2.new(1, -70, 0.5, -15)
+    MinBtn.BackgroundTransparency = 1; MinBtn.Text = "−"
+    MinBtn.TextColor3 = Theme.Accent; MinBtn.Font = Enum.Font.GothamBold; MinBtn.TextSize = 26
+    MinBtn.AutoButtonColor = false
+
+    local LockBtn = Instance.new("TextButton", TopBar)
+    LockBtn.Size = UDim2.new(0, 30, 0, 30); LockBtn.Position = UDim2.new(1, -36, 0.5, -15)
+    LockBtn.BackgroundTransparency = 1; LockBtn.Text = "🔓"
+    LockBtn.TextColor3 = Theme.Accent; LockBtn.Font = Enum.Font.GothamBold; LockBtn.TextSize = 18
+    LockBtn.AutoButtonColor = false
+
+    local TabBar = Instance.new("Frame", MainFrame)
+    TabBar.Name = "TabBar"; TabBar.Size = UDim2.new(1, -20, 0, 40)
+    TabBar.Position = UDim2.new(0, 10, 0, 52); TabBar.BackgroundColor3 = Theme.TabBarBg
+    TabBar.BackgroundTransparency = 0.35; TabBar.BorderSizePixel = 0
+    Instance.new("UICorner", TabBar).CornerRadius = UDim.new(0, 8)
+    local TabBarStroke = Instance.new("UIStroke", TabBar)
+    TabBarStroke.Color = Theme.LineColor; TabBarStroke.Thickness = 1; TabBarStroke.Transparency = 0.5
+
+    local TabLayout = Instance.new("UIListLayout", TabBar)
+    TabLayout.FillDirection = Enum.FillDirection.Horizontal
+    TabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    TabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    TabLayout.Padding = UDim.new(0, 5); TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local function criarAba(texto, order)
+        local b = Instance.new("TextButton", TabBar)
+        b.Size = UDim2.new(0, 65, 1, -10); b.BackgroundColor3 = Theme.Background
+        b.BackgroundTransparency = 0.5; b.Text = texto; b.TextColor3 = Theme.TextDark
+        b.Font = Enum.Font.GothamMedium; b.TextSize = 10
+        b.AutoButtonColor = false; b.LayoutOrder = order
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+        return b
+    end
+
+    local AbaPrincipal = criarAba("Principal", 1)
+    local AbaFly = criarAba("Fly", 2)
+    local AbaMM2 = criarAba("MM2", 3)
+    local AbaItens = criarAba("Itens", 4)
+    local AbaCreditos = criarAba("Créditos", 5)
+
+    local ContentArea = Instance.new("Frame", MainFrame)
+    ContentArea.Size = UDim2.new(1, -20, 1, -105); ContentArea.Position = UDim2.new(0, 10, 0, 98)
+    ContentArea.BackgroundColor3 = Theme.ContentBg
+    ContentArea.BackgroundTransparency = 0.4; ContentArea.BorderSizePixel = 0
+    Instance.new("UICorner", ContentArea).CornerRadius = UDim.new(0, 10)
+    local ContentStroke = Instance.new("UIStroke", ContentArea)
+    ContentStroke.Color = Theme.LineColor; ContentStroke.Thickness = 1.5; ContentStroke.Transparency = 0.6
+
+    local PageTitle = Instance.new("TextLabel", ContentArea)
+    PageTitle.Size = UDim2.new(1, 0, 0, 50); PageTitle.Position = UDim2.new(0, 0, 0, 5)
+    PageTitle.BackgroundTransparency = 1; PageTitle.Text = "Principal"
+    PageTitle.TextColor3 = Color3.fromRGB(60, 35, 90); PageTitle.Font = Enum.Font.GothamBold
+    PageTitle.TextSize = 32
+
+    local function criarPagina()
+        local p = Instance.new("ScrollingFrame", ContentArea)
+        p.Size = UDim2.new(1, -20, 1, -60); p.Position = UDim2.new(0, 10, 0, 50)
+        p.BackgroundTransparency = 1; p.Visible = false
+        p.ScrollBarThickness = 4; p.ScrollBarImageColor3 = Theme.Accent
+        p.CanvasSize = UDim2.new(0, 0, 0, 0); p.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        local l = Instance.new("UIListLayout", p)
+        l.Padding = UDim.new(0, 6); l.SortOrder = Enum.SortOrder.LayoutOrder
+        local pad = Instance.new("UIPadding", p); pad.PaddingRight = UDim.new(0, 5)
+        return p
+    end
+
+    local PagePrincipal = criarPagina(); PagePrincipal.Visible = true
+    local PageFly = criarPagina()
+    local PageMM2 = criarPagina()
+    local PageItens = criarPagina()
+
+    local PageCreditos = Instance.new("Frame", ContentArea)
+    PageCreditos.Size = UDim2.new(1, -20, 1, -60); PageCreditos.Position = UDim2.new(0, 10, 0, 50)
+    PageCreditos.BackgroundTransparency = 1; PageCreditos.Visible = false
+    local CreditosLayout = Instance.new("UIListLayout", PageCreditos)
+    CreditosLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    CreditosLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    CreditosLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    CreditosLayout.Padding = UDim.new(0, 4)
+
+    local ImgCred = Instance.new("Frame", PageCreditos)
+    ImgCred.Size = UDim2.new(0, 56, 0, 56); ImgCred.BackgroundColor3 = Theme.Accent
+    ImgCred.LayoutOrder = 1; ImgCred.ZIndex = 3
+    Instance.new("UICorner", ImgCred).CornerRadius = UDim.new(1, 0)
+    local ImgCredL = Instance.new("TextLabel", ImgCred)
+    ImgCredL.Size = UDim2.new(1, 0, 1, 0); ImgCredL.BackgroundTransparency = 1
+    ImgCredL.Text = "A"; ImgCredL.Font = Enum.Font.GothamBlack; ImgCredL.TextSize = 26
+    ImgCredL.TextColor3 = Theme.TextActive
+
+    local Dica = Instance.new("TextLabel", PageCreditos)
+    Dica.Size = UDim2.new(1, 0, 0, 14); Dica.BackgroundTransparency = 1
+    Dica.Text = "Toque para copiar o Discord"; Dica.TextColor3 = Theme.TextDark
+    Dica.Font = Enum.Font.GothamMedium; Dica.TextSize = 11; Dica.LayoutOrder = 2
+
+    local copyFn = setclipboard or toclipboard or (syn and syn.write_clipboard)
+    ImgCred.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+            local ok = false
+            if copyFn then ok = pcall(copyFn, CONFIG.DISCORD) end
+            Dica.Text = ok and "✅ Discord copiado!" or ("Link: " .. CONFIG.DISCORD)
+            Dica.TextColor3 = ok and Color3.fromRGB(80, 255, 120) or Theme.Text
+            task.delay(2.5, function() Dica.Text = "Toque para copiar o Discord"; Dica.TextColor3 = Theme.TextDark end)
+        end
+    end)
+
+    local Nomes = Instance.new("TextLabel", PageCreditos)
+    Nomes.Size = UDim2.new(1, 0, 0, 28); Nomes.BackgroundTransparency = 1
+    Nomes.Text = CONFIG.NOME_DONO; Nomes.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Nomes.Font = Enum.Font.GothamBlack; Nomes.TextSize = 24; Nomes.LayoutOrder = 3
+    local ng = Instance.new("UIGradient", Nomes)
+    ng.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Theme.Accent),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 255)),
+    })
+    for i, nome in ipairs(CONFIG.OUTROS_NOMES) do
+        local l = Instance.new("TextLabel", PageCreditos)
+        l.Size = UDim2.new(1, 0, 0, 20); l.BackgroundTransparency = 1
+        l.Text = nome; l.TextColor3 = Theme.Text
+        l.Font = Enum.Font.GothamBold; l.TextSize = 16; l.LayoutOrder = 3 + i
+    end
+
+    return {
+        ScreenGui = ScreenGui, MainFrame = MainFrame, TopBar = TopBar,
+        MinBtn = MinBtn, LockBtn = LockBtn, TabBar = TabBar,
+        ContentArea = ContentArea, PageTitle = PageTitle,
+        Abas = { AbaPrincipal, AbaFly, AbaMM2, AbaItens, AbaCreditos },
+        Paginas = { PagePrincipal, PageFly, PageMM2, PageItens, PageCreditos },
+        Nomes = { "Principal", "Fly", "MM2", "Itens", "Créditos" },
+        TAMANHO_NORMAL = TAMANHO_NORMAL, TAMANHO_MINI = TAMANHO_MINI,
+    }
+end-- ============================================================
+-- AETHER HUB MM2 — PARTE 3/12
+-- ============================================================
+local function criarToggle(parent, texto, order, callback, padrao)
+    local row = Instance.new("Frame", parent)
+    row.Size = UDim2.new(1, -20, 0, 40); row.BackgroundColor3 = Color3.fromRGB(22, 15, 35)
+    row.BorderSizePixel = 0; row.LayoutOrder = order; row.ZIndex = 2
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
+    local rs = Instance.new("UIStroke", row); rs.Color = Theme.LineColor; rs.Thickness = 1; rs.Transparency = 0.5
+
+    local txt = Instance.new("TextLabel", row)
+    txt.Size = UDim2.new(1, -70, 1, 0); txt.Position = UDim2.new(0, 15, 0, 0)
+    txt.BackgroundTransparency = 1; txt.Text = texto; txt.TextColor3 = Theme.Text
+    txt.Font = Enum.Font.GothamMedium; txt.TextSize = 13; txt.TextXAlignment = Enum.TextXAlignment.Left
+
+    local btn = Instance.new("TextButton", row)
+    btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundTransparency = 1; btn.Text = ""; btn.ZIndex = 4
+
+    local bg = Instance.new("Frame", row)
+    bg.Size = UDim2.new(0, 40, 0, 20); bg.Position = UDim2.new(1, -50, 0.5, -10)
+    bg.BackgroundColor3 = Color3.fromRGB(60, 40, 80); bg.ZIndex = 3
+    Instance.new("UICorner", bg).CornerRadius = UDim.new(1, 0)
+
+    local knob = Instance.new("Frame", bg)
+    knob.Size = UDim2.new(0, 16, 0, 16); knob.Position = UDim2.new(0, 2, 0.5, -8)
+    knob.BackgroundColor3 = Theme.Text; knob.ZIndex = 4
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
+
+    local on = (padrao == true)
+    if on then
+        bg.BackgroundColor3 = Theme.Accent
+        knob.Position = UDim2.new(1, -18, 0.5, -8)
+        knob.BackgroundColor3 = Theme.Background
+    end
+    btn.MouseButton1Click:Connect(function()
+        on = not on
+        if on then
+            TweenService:Create(bg, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Accent}):Play()
+            TweenService:Create(knob, TweenInfo.new(0.2), {Position = UDim2.new(1, -18, 0.5, -8), BackgroundColor3 = Theme.Background}):Play()
+        else
+            TweenService:Create(bg, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 40, 80)}):Play()
+            TweenService:Create(knob, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0.5, -8), BackgroundColor3 = Theme.Text}):Play()
+        end
+        if callback then callback(on) end
+    end)
+end
+
+local function criarSlider(parent, texto, min, max, padrao, order, callback)
+    local c = Instance.new("Frame", parent)
+    c.Size = UDim2.new(1, -20, 0, 45); c.BackgroundColor3 = Color3.fromRGB(22, 15, 35)
+    c.BorderSizePixel = 0; c.LayoutOrder = order; c.ZIndex = 2
+    Instance.new("UICorner", c).CornerRadius = UDim.new(0, 6)
+    local cs = Instance.new("UIStroke", c); cs.Color = Theme.LineColor; cs.Thickness = 1; cs.Transparency = 0.5
+
+    local lb = Instance.new("TextLabel", c)
+    lb.Size = UDim2.new(1, -20, 0, 20); lb.Position = UDim2.new(0, 10, 0, 4)
+    lb.BackgroundTransparency = 1; lb.Text = texto .. ": " .. padrao
+    lb.TextColor3 = Theme.Text; lb.Font = Enum.Font.GothamMedium; lb.TextSize = 12
+    lb.TextXAlignment = Enum.TextXAlignment.Left; lb.ZIndex = 3
+
+    local bar = Instance.new("Frame", c)
+    bar.Size = UDim2.new(0.9, 0, 0, 6); bar.Position = UDim2.new(0.05, 0, 0, 30)
+    bar.BackgroundColor3 = Color3.fromRGB(50, 50, 60); bar.BorderSizePixel = 0; bar.ZIndex = 3
+    Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
+
+    local fill = Instance.new("Frame", bar)
+    fill.Size = UDim2.new((padrao - min) / (max - min), 0, 1, 0)
+    fill.BackgroundColor3 = Theme.Accent; fill.BorderSizePixel = 0; fill.ZIndex = 4
+    Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+
+    local handle = Instance.new("TextButton", bar)
+    handle.Size = UDim2.new(0, 20, 0, 20); handle.Position = UDim2.new((padrao - min) / (max - min), -10, 0.5, -10)
+    handle.BackgroundTransparency = 1; handle.Text = "●"; handle.TextColor3 = Theme.Text
+    handle.Font = Enum.Font.GothamBold; handle.TextSize = 18; handle.ZIndex = 5
+
+    local arrastando = false
+    local function update(input)
+        local pX = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+        fill.Size = UDim2.new(pX, 0, 1, 0)
+        handle.Position = UDim2.new(pX, -10, 0.5, -10)
+        local v = math.floor(min + ((max - min) * pX))
+        lb.Text = texto .. ": " .. v
+        if callback then callback(v) end
+    end
+    handle.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then arrastando = true end end)
+    bar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then arrastando = true; update(i) end end)
+    UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then arrastando = false end end)
+    UserInputService.InputChanged:Connect(function(i) if arrastando and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then update(i) end end)
+end
+
+local SpeedAtual = 16
+local JumpAtual = 50
+local FlySpeed = 60
+local NoclipAtivo = false
+local flyState = { on = false, conn = nil }
+
+local function setFly(on)
+    flyState.on = on
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if on then
+        if not hrp then return end
+        local bv = Instance.new("BodyVelocity", hrp)
+        bv.Name = "AetherFly"; bv.MaxForce = Vector3.new(1e5,1e5,1e5)
+        local bg = Instance.new("BodyGyro", hrp)
+        bg.Name = "AetherGyro"; bg.P = 1e4; bg.MaxTorque = Vector3.new(1e5,1e5,1e5); bg.CFrame = hrp.CFrame
+        flyState.conn = RunService.RenderStepped:Connect(function()
+            if not flyState.on then return end
+            local h = char and char:FindFirstChild("HumanoidRootPart")
+            if not h then return end
+            local cam = workspace.CurrentCamera
+            local dir = Vector3.zero
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Up) then dir += cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.Down) then dir -= cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Left) then dir -= cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) or UserInputService:IsKeyDown(Enum.KeyCode.Right) then dir += cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then dir -= Vector3.new(0,1,0) end
+            bv.Velocity = dir.Magnitude > 0 and (dir.Unit * FlySpeed) or Vector3.zero
+            bg.CFrame = cam.CFrame
+        end)
+    else
+        if flyState.conn then flyState.conn:Disconnect(); flyState.conn = nil end
+        if hrp then
+            if hrp:FindFirstChild("AetherFly") then hrp.AetherFly:Destroy() end
+            if hrp:FindFirstChild("AetherGyro") then hrp.AetherGyro:Destroy() end
+        end
+    end
+end
+
+RunService.Stepped:Connect(function()
+    if LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            if hum.WalkSpeed ~= SpeedAtual then hum.WalkSpeed = SpeedAtual end
+            if hum.JumpPower ~= JumpAtual then hum.UseJumpPower = true; hum.JumpPower = JumpAtual end
+        end
+        if NoclipAtivo then
+            for _, v in ipairs(LocalPlayer.Character:GetDescendants()) do
+                if v:IsA("BasePart") and v.CanCollide then v.CanCollide = false end
+            end
+        end
+    end
+end)-- ============================================================
+-- AETHER HUB MM2 — PARTE 4/12
+-- ============================================================
+local U = buildUI()
+local ScreenGui = U.ScreenGui
+local MainFrame = U.MainFrame
+local TopBar = U.TopBar
+local MinBtn = U.MinBtn
+local LockBtn = U.LockBtn
+local Abas = U.Abas
+local Paginas = U.Paginas
+local PageTitle = U.PageTitle
+local PagePrincipal, PageFly, PageMM2, PageItens, PageCreditos = Paginas[1], Paginas[2], Paginas[3], Paginas[4], Paginas[5]
+
+local orderCounter = 0
+local function nextOrder() orderCounter += 1; return orderCounter end
+local function header(parent, text)
+    local h = Instance.new("TextLabel", parent)
+    h.Size = UDim2.new(1, -5, 0, 30); h.BackgroundColor3 = Theme.TabBarBg
+    h.BackgroundTransparency = 0.2; h.Text = "  " .. text
+    h.TextColor3 = Theme.Accent; h.Font = Enum.Font.GothamBold; h.TextSize = 14
+    h.TextXAlignment = Enum.TextXAlignment.Left; h.LayoutOrder = nextOrder(); h.ZIndex = 3
+    Instance.new("UICorner", h).CornerRadius = UDim.new(0, 6)
+    local s = Instance.new("UIStroke", h); s.Color = Theme.LineColor; s.Thickness = 1; s.Transparency = 0.5
+end
+
+local function addBtn(parent, texto, cb)
+    local b = Instance.new("TextButton", parent)
+    b.Size = UDim2.new(1, -20, 0, 38); b.BackgroundColor3 = Theme.TabBarBg
+    b.Text = texto; b.TextColor3 = Theme.Text
+    b.Font = Enum.Font.GothamMedium; b.TextSize = 13
+    b.BorderSizePixel = 0; b.LayoutOrder = nextOrder(); b.ZIndex = 2
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+    local s = Instance.new("UIStroke", b); s.Color = Theme.LineColor; s.Thickness = 1; s.Transparency = 0.5
+    b.MouseButton1Click:Connect(cb)
+end
+
+header(PagePrincipal, "Script")
+criarToggle(PagePrincipal, "✈  Fly (WASD / setas)", nextOrder(), function(s) setFly(s) end)
+criarToggle(PagePrincipal, "👻 Noclip", nextOrder(), function(s) NoclipAtivo = s end)
+
+header(PagePrincipal, "Configurações")
+criarSlider(PagePrincipal, "Velocidade", 16, 200, SpeedAtual, nextOrder(), function(v) SpeedAtual = v end)
+criarSlider(PagePrincipal, "Força do Pulo", 50, 250, JumpAtual, nextOrder(), function(v) JumpAtual = v end)
+criarSlider(PagePrincipal, "Velocidade do Fly", 20, 300, FlySpeed, nextOrder(), function(v) FlySpeed = v end)
+
+header(PageFly, "Setas na Tela")
+local arrowsConn = nil
+local held = {fwd=false, back=false, left=false, right=false, up=false, down=false}
+criarToggle(PageFly, "Mostrar setas na tela", nextOrder(), function(s)
+    if s then
+        local container = Instance.new("Frame", ScreenGui)
+        container.Name = "AetherFlyArrows"
+        container.Size = UDim2.new(1, 0, 1, 0)
+        container.BackgroundTransparency = 1
+        local function makeArrow(parent, txt, pos, key)
+            local b = Instance.new("TextButton", parent)
+            b.Size = UDim2.new(0, 55, 0, 55); b.Position = pos
+            b.BackgroundColor3 = Theme.TabBarBg; b.BackgroundTransparency = 0.15
+            b.Text = txt; b.TextColor3 = Theme.Accent
+            b.Font = Enum.Font.GothamBold; b.TextSize = 24; b.BorderSizePixel = 0
+            Instance.new("UICorner", b).CornerRadius = UDim.new(1, 0)
+            local st = Instance.new("UIStroke", b); st.Color = Theme.Accent; st.Thickness = 2; st.Transparency = 0.2
+            b.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then held[key] = true; b.BackgroundColor3 = Theme.Accent end end)
+            b.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then held[key] = false; b.BackgroundColor3 = Theme.TabBarBg end end)
+        end
+        makeArrow(container, "▲", UDim2.new(0, 90, 0.5, -85), "fwd")
+        makeArrow(container, "▼", UDim2.new(0, 90, 0.5,  25), "back")
+        makeArrow(container, "◀", UDim2.new(0, 25, 0.5, -30), "left")
+        makeArrow(container, "▶", UDim2.new(0, 155, 0.5, -30), "right")
+        makeArrow(container, "▲", UDim2.new(1, -85, 0.5, -85), "up")
+        makeArrow(container, "▼", UDim2.new(1, -85, 0.5,  25), "down")
+        arrowsConn = RunService.RenderStepped:Connect(function()
+            local hrp = getHRP(); if not hrp then return end
+            local bv = hrp:FindFirstChild("AetherFly"); if not bv then return end
+            local cam = workspace.CurrentCamera
+            local dir = Vector3.zero
+            if held.fwd then dir += cam.CFrame.LookVector end
+            if held.back then dir -= cam.CFrame.LookVector end
+            if held.left then dir -= cam.CFrame.RightVector end
+            if held.right then dir += cam.CFrame.RightVector end
+            if held.up then dir += Vector3.new(0,1,0) end
+            if held.down then dir -= Vector3.new(0,1,0) end
+            if dir.Magnitude > 0 then bv.Velocity = dir.Unit * FlySpeed end
+        end)
+    else
+        if arrowsConn then arrowsConn:Disconnect(); arrowsConn = nil end
+        local c = ScreenGui:FindFirstChild("AetherFlyArrows")
+        if c then c:Destroy() end
+        for k in pairs(held) do held[k] = false end
+    end
+end)
+
+header(PageMM2, "Murderer")
+criarToggle(PageMM2, "🔴 ESP Murderer", nextOrder(), function(s)
+    if s then
+        task.spawn(function()
+            while true do
+                task.wait(0.5)
+                for _, p in ipairs(Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character and isMurderer(p) then
+                        if not p.Character:FindFirstChild("AetherESP_Murder") then
+                            local h = Instance.new("Highlight")
+                            h.Name = "AetherESP_Murder"; h.FillColor = Color3.fromRGB(255, 30, 30)
+                            h.OutlineColor = Color3.fromRGB(255, 0, 0)
+                            h.FillTransparency = 0.55; h.OutlineTransparency = 0
+                            h.Parent = p.Character
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+criarToggle(PageMM2, "💀 Auto Kill (faca)", nextOrder(), function(s)
+    if s then
+        task.spawn(function()
+            while true do
+                task.wait(0.3)
+                local char = LocalPlayer.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                local knife = char and char:FindFirstChild("Knife")
+                if hrp and knife then
+                    local orig = hrp.CFrame
+                    for _, p in ipairs(Players:GetPlayers()) do
+                        if p ~= LocalPlayer and p.Character then
+                            local th = p.Character:FindFirstChildOfClass("Humanoid")
+                            local tr = p.Character:FindFirstChild("HumanoidRootPart")
+                            if th and tr and th.Health > 0 then
+                                hrp.CFrame = tr.CFrame * CFrame.new(0, 0, 2)
+                                task.wait(0.05)
+                            end
+                        end
+                    end
+                    hrp.CFrame = orig
+                end
+            end
+        end)
+    end
+end)
+
+header(PageMM2, "Sheriff")
+criarToggle(PageMM2, "🔵 ESP Sheriff", nextOrder(), function(s)
+    if s then
+        task.spawn(function()
+            while true do
+                task.wait(0.5)
+                for _, p in ipairs(Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character and isSheriff(p) then
+                        if not p.Character:FindFirstChild("AetherESP_Sheriff") then
+                            local h = Instance.new("Highlight")
+                            h.Name = "AetherESP_Sheriff"; h.FillColor = Color3.fromRGB(30, 120, 255)
+                            h.OutlineColor = Color3.fromRGB(0, 80, 255)
+                            h.FillTransparency = 0.55; h.OutlineTransparency = 0
+                            h.Parent = p.Character
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+criarToggle(PageMM2, "🎯 Aimbot (arma)", nextOrder(), function(s)
+    if s then
+        task.spawn(function()
+            while true do
+                task.wait()
+                local gun = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Gun")
+                if gun then
+                    local closest, dmin = nil, math.huge
+                    local cam = workspace.CurrentCamera
+                    for _, p in ipairs(Players:GetPlayers()) do
+                        if p ~= LocalPlayer and p.Character and isMurderer(p) then
+                            local tr = p.Character:FindFirstChild("HumanoidRootPart")
+                            local th = p.Character:FindFirstChildOfClass("Humanoid")
+                            if tr and th and th.Health > 0 then
+                                local d = (cam.CFrame.Position - tr.Position).Magnitude
+                                if d < dmin then dmin = d; closest = tr end
+                            end
+                        end
+                    end
+                    if closest then cam.CFrame = CFrame.new(cam.CFrame.Position, closest.Position) end
+                end
+            end
+        end)
+    end
+end)
+
+header(PageItens, "Itens MM2")
+criarToggle(PageItens, "🔫 TP to Gun", nextOrder(), function(s)
+    if not s then return end
+    local hrp = getHRP(); if not hrp then return end
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj.Name == "GunDrop" or obj.Name == "Gun" then
+            local target = obj:IsA("Model") and obj.PrimaryPart or (obj:IsA("BasePart") and obj)
+            if target then hrp.CFrame = target.CFrame * CFrame.new(0, 3, 0); return end
+        end
+    end
+end)
+criarToggle(PageItens, "💡 Full Bright", nextOrder(), function(s)
+    if s then
+        Lighting.Ambient = Color3.fromRGB(200,200,200)
+        Lighting.OutdoorAmbient = Color3.fromRGB(200,200,200)
+        Lighting.Brightness = 3; Lighting.FogEnd = 100000
+    else
+        Lighting.Ambient = Color3.fromRGB(70,70,70)
+        Lighting.OutdoorAmbient = Color3.fromRGB(128,128,128)
+        Lighting.Brightness = 2; Lighting.FogEnd = 1000
+    end
+end)
+
+local function MudarAba(idx)
+    for i = 1, #Abas do
+        Abas[i].BackgroundColor3 = Theme.Background
+        Abas[i].BackgroundTransparency = 0.5
+        Abas[i].TextColor3 = Theme.TextDark
+        Abas[i].Font = Enum.Font.GothamMedium
+        Paginas[i].Visible = false
+    end
+    Abas[idx].BackgroundColor3 = Theme.Accent
+    Abas[idx].BackgroundTransparency = 0
+    Abas[idx].TextColor3 = Theme.TextActive
+    Abas[idx].Font = Enum.Font.GothamBold
+    Paginas[idx].Visible = true
+    PageTitle.Text = U.Nomes[idx]
+end
+for i, b in ipairs(Abas) do b.MouseButton1Click:Connect(function() MudarAba(i) end) end
+
+local draggable = true
+LockBtn.MouseButton1Click:Connect(function()
+    draggable = not draggable
+    LockBtn.Text = draggable and "🔓" or "🔒"
+    LockBtn.TextColor3 = draggable and Theme.Accent or Color3.fromRGB(255,120,120)
+end)
+
+local dragging, dragStart, startPos
+TopBar.InputBegan:Connect(function(i)
+    if not draggable then return end
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        dragging = true; dragStart = i.Position; startPos = MainFrame.Position
+        i.Changed:Connect(function() if i.UserInputState == Enum.UserInputState.End then dragging = false end end)
+    end
+end)
+UserInputService.InputChanged:Connect(function(i)
+    if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+        local d = i.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+    end
+end)
+
+local Mini = Instance.new("TextButton", ScreenGui)
+Mini.Size = UDim2.new(0, 60, 0, 60); Mini.Position = UDim2.new(0.5, -30, 0.5, -30)
+Mini.BackgroundColor3 = Theme.Background; Mini.Text = "+"
+Mini.TextColor3 = Theme.Accent; Mini.Font = Enum.Font.GothamBold; Mini.TextSize = 30
+Mini.BorderSizePixel = 0; Mini.Visible = false
+Instance.new("UICorner", Mini).CornerRadius = UDim.new(1, 0)
+local ms = Instance.new("UIStroke", Mini); ms.Color = Theme.Accent; ms.Thickness = 2
+local mg = Instance.new("UIStroke", Mini); mg.Color = Theme.Accent; mg.Thickness = 6; mg.Transparency = 0.7
+
+local isMini = false
+MinBtn.MouseButton1Click:Connect(function()
+    if not isMini then
+        isMini = true; TopBar.Visible = false
+        U.TabBar.Visible = false; U.ContentArea.Visible = false
+        Mini.Visible = true
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = U.TAMANHO_MINI}):Play()
+    end
+end)
+Mini.MouseButton1Click:Connect(function()
+    if isMini then
+        isMini = false; Mini.Visible = false
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = U.TAMANHO_NORMAL}):Play()
+        task.wait(0.1)
+        TopBar.Visible = true; U.TabBar.Visible = true; U.ContentArea.Visible = true
+    end
+end)
+
+local function tryKey()
+    local typed = keyBox.Text:gsub("^%s+", ""):gsub("%s+$", ""):upper()
+    if typed == KEY then
+        keyGui:Destroy()
+        print("[Aether Hub MM2] Key correta!")
+    else
+        keyBox.TextColor3 = Color3.fromRGB(255, 100, 100)
+        boxStroke.Color = Color3.fromRGB(255, 80, 80)
+        keySub.Text = "❌ Key incorreta!"
+        keySub.TextColor3 = Color3.fromRGB(255, 100, 100)
+        task.wait(1)
+        keyBox.TextColor3 = Theme.Text; boxStroke.Color = Theme.LineColor
+        keySub.Text = "Digite a Key para continuar"; keySub.TextColor3 = Theme.TextDark
+    end
+end
+keyBtn.MouseButton1Click:Connect(tryKey)
+keyBox.FocusLost:Connect(function(enter) if enter then tryKey() end end)-- ============================================================
+-- AETHER HUB MM2 — PARTE 5/12
+-- ============================================================
+local CONFIG2 = {
+    AutoThrowKnife=false, AutoShoot=false, GunFastReload=false, KnifeFastThrow=false,
+    CoinMagnet=false, CoinMagnetRaio=50,
+    FlyV3=false, Airwalk=false, Phase=false, RocketJump=false, BunnyHop=false,
+    Slide=false, WallRun=false, DoubleJump=false, Dash=false, SwimBoost=false,
+    ESPAvatar=false, ESPBadge=false, ESPStatusIcon=false, ESPVoiceChat=false,
+    ESPArma=false, ESPFadeDistance=false, ESPAuraPulsante=false,
+    ESPCrosshairAlvo=false, ESPWallCheckFinas=false,
+    AntiReport=false, AntiSpectate=false, AntiDamageLocal=false, AntiSlow=false,
+    AntiBlind=false, AntiTrap=false, AntiGravityFlip=false,
+    AntiSoundSpam=false, AntiParticleSpam=false, AntiLightning=false,
+    UIHistorico={}, UIFavoritos={}, UIOpacidade=0, UIEscala=1,
+    DebugMode=false, PerformanceMode=false,
+    CustomCrosshair=false, Hitmarker=false, RGBAura=false, TrailColorido=false,
+    FOVCustom=70, Watermark=true, AntiAFK=true, AutoRespawn=false,
+    HitboxExpander=false, HitboxSize=8, AutoPickupGun=false, CoinFarm=false,
+    AntiVoid=false, AntiRagdoll=false, AntiFling=false, AntiTP=false,
+    InfiniteJump=false, Spider=false, ClickTP=false, FreezePlayer=false,
+    GodModeLocal=false, AutoWin=false, DodgeKnife=false, KnifeAimbot=false,
+}
+
+local TEMAS = {
+    roxo = Color3.fromRGB(190,100,255), ciano = Color3.fromRGB(0,220,255),
+    verde = Color3.fromRGB(80,255,120), vermelho = Color3.fromRGB(255,80,80),
+    rosa = Color3.fromRGB(255,120,200), dourado = Color3.fromRGB(255,200,60),
+}
+
+local KEYBINDS = {
+    Fly = Enum.KeyCode.F1, Noclip = Enum.KeyCode.F2,
+    InfiniteJump = Enum.KeyCode.F3, AntiVoid = Enum.KeyCode.F4,
+    Panic = Enum.KeyCode.F12, HideUI = Enum.KeyCode.RightControl,
+}
+
+local STATE2 = { conns2 = {} }
+local function addConn(c) table.insert(STATE2.conns2, c); return c end
+local function Log(t) if CONFIG2.DebugMode then print("[Aether] "..tostring(t)) end end
+local function pushHistorico(t)
+    table.insert(CONFIG2.UIHistorico, 1, os.date("%H:%M:%S").." — "..t)
+    if #CONFIG2.UIHistorico > 10 then table.remove(CONFIG2.UIHistorico) end
+end
+
+local notifGui
+local function Notify(msg, cor)
+    if not notifGui then
+        notifGui = Instance.new("ScreenGui")
+        notifGui.Name = "AetherNotif"; notifGui.ResetOnSpawn = false
+        notifGui.DisplayOrder = 1000
+        notifGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    end
+    local lbl = Instance.new("TextLabel", notifGui)
+    lbl.Size = UDim2.new(0, 260, 0, 36); lbl.Position = UDim2.new(0.5, -130, 0, -50)
+    lbl.BackgroundColor3 = Theme.Background; lbl.BackgroundTransparency = 0.1
+    lbl.Text = msg; lbl.TextColor3 = cor or Theme.Accent
+    lbl.Font = Enum.Font.GothamBold; lbl.TextSize = 13; lbl.BorderSizePixel = 0
+    Instance.new("UICorner", lbl).CornerRadius = UDim.new(0, 8)
+    local s = Instance.new("UIStroke", lbl); s.Color = cor or Theme.Accent; s.Thickness = 2
+    TweenService:Create(lbl, TweenInfo.new(0.3), {Position = UDim2.new(0.5, -130, 0, 20)}):Play()
+    task.delay(2.5, function()
+        TweenService:Create(lbl, TweenInfo.new(0.3), {Position = UDim2.new(0.5, -130, 0, -50), BackgroundTransparency = 1, TextTransparency = 1}):Play()
+        task.wait(0.35); lbl:Destroy()
+    end)
+end-- ============================================================
+-- AETHER HUB MM2 — PARTE 6/12
+-- ============================================================
+local voidConn, ragdollConn, flingConn, antiTPConn, respawnConn, ultimaPosTP
+
+local function setAntiVoid(on)
+    CONFIG2.AntiVoid = on
+    if on then
+        voidConn = RunService.Heartbeat:Connect(function()
+            local hrp = getHRP(); if not hrp then return end
+            local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum and hum.Health <= 0 then return end
+            if hrp.Position.Y < -50 then
+                local spawn = workspace:FindFirstChildOfClass("SpawnLocation")
+                hrp.CFrame = spawn and (spawn.CFrame * CFrame.new(0,5,0)) or CFrame.new(0,50,0)
+                Notify("💀 Anti-Void salvou!", Theme.Accent)
+            end
+        end)
+    else
+        if voidConn then voidConn:Disconnect(); voidConn = nil end
+    end
+end
+
+local function setAntiRagdoll(on)
+    CONFIG2.AntiRagdoll = on
+    if on then
+        ragdollConn = RunService.Stepped:Connect(function()
+            local char = LocalPlayer.Character; if not char then return end
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum and hum.PlatformStand then hum.PlatformStand = false end
+        end)
+    else
+        if ragdollConn then ragdollConn:Disconnect(); ragdollConn = nil end
+    end
+end
+
+local function setAntiFling(on)
+    CONFIG2.AntiFling = on
+    if on then
+        flingConn = RunService.Heartbeat:Connect(function()
+            local hrp = getHRP(); if not hrp then return end
+            if hrp.AssemblyLinearVelocity.Magnitude > 500 then
+                hrp.AssemblyLinearVelocity = Vector3.zero
+                hrp.CFrame = CFrame.new(hrp.Position)
+            end
+        end)
+    else
+        if flingConn then flingConn:Disconnect(); flingConn = nil end
+    end
+end
+
+local function setAntiTP(on)
+    CONFIG2.AntiTP = on
+    if on then
+        ultimaPosTP = nil
+        antiTPConn = RunService.Heartbeat:Connect(function()
+            local hrp = getHRP(); if not hrp then return end
+            if not ultimaPosTP then ultimaPosTP = hrp.Position; return end
+            local delta = (hrp.Position - ultimaPosTP).Magnitude
+            if delta > 100 and delta < 5000 then hrp.CFrame = CFrame.new(ultimaPosTP)
+            else ultimaPosTP = hrp.Position end
+        end)
+    else
+        if antiTPConn then antiTPConn:Disconnect(); antiTPConn = nil end
+    end
+end
+
+local function setAntiKick(on)
+    if not on then return end
+    pcall(function()
+        local old
+        old = hookmetamethod(game, "__namecall", function(self, ...)
+            if not checkcaller() and getnamecallmethod() == "Kick" then
+                Notify("🛡️ Anti-Kick!", Theme.Accent); return
+            end
+            return old(self, ...)
+        end)
+    end)
+end
+
+local function setAntiAFK(on)
+    CONFIG2.AntiAFK = on
+    if on then
+        pcall(function()
+            local vu = game:GetService("VirtualUser")
+            LocalPlayer.Idled:Connect(function()
+                if not CONFIG2.AntiAFK then return end
+                vu:CaptureController(); vu:ClickButton2(Vector2.new())
+            end)
+        end)
+    end
+end
+
+local function setAutoRespawn(on)
+    CONFIG2.AutoRespawn = on
+    if on then
+        respawnConn = RunService.Heartbeat:Connect(function()
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum and hum.Health <= 0 then
+                task.wait(1); LocalPlayer:LoadCharacter()
+            end
+        end)
+    else
+        if respawnConn then respawnConn:Disconnect(); respawnConn = nil end
+    end
+end
+
+local function setGodMode(on)
+    CONFIG2.GodModeLocal = on
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then hum.MaxHealth = on and math.huge or 100; hum.Health = on and math.huge or 100 end
+    end
+end-- ============================================================
+-- AETHER HUB MM2 — PARTE 7/12
+-- ============================================================
+local function setAntiReport(on)
+    CONFIG2.AntiReport = on
+    if not on then return end
+    pcall(function()
+        local old
+        old = hookmetamethod(game, "__namecall", function(self, ...)
+            if not checkcaller() and getnamecallmethod() == "ReportAbuse" then return end
+            return old(self, ...)
+        end)
+    end)
+end
+
+local function setAntiSpectate(on) CONFIG2.AntiSpectate = on end
+
+local function setAntiScreenshot(on)
+    if not on then return end
+    pcall(function()
+        local old
+        old = hookmetamethod(game, "__namecall", function(self, ...)
+            if not checkcaller() and getnamecallmethod() == "TakeScreenshot" then return end
+            return old(self, ...)
+        end)
+    end)
+end
+
+local function setAntiRemoteKick(on)
+    if not on then return end
+    pcall(function()
+        local old
+        old = hookmetamethod(game, "__namecall", function(self, ...)
+            local m = getnamecallmethod()
+            if not checkcaller() and (m == "Kick" or m == "kick") then return end
+            return old(self, ...)
+        end)
+    end)
+end
+
+local function setAntiDamageLocal(on)
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then hum.MaxHealth = on and math.huge or 100; hum.Health = on and math.huge or 100 end
+    end
+end
+
+local function setAntiSlow(on)
+    CONFIG2.AntiSlow = on
+    if on then
+        addConn(RunService.Stepped:Connect(function()
+            if not CONFIG2.AntiSlow then return end
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum and hum.WalkSpeed < SpeedAtual then hum.WalkSpeed = SpeedAtual end
+        end))
+    end
+end
+
+local function setAntiBlind(on)
+    CONFIG2.AntiBlind = on
+    if on then
+        addConn(RunService.Heartbeat:Connect(function()
+            if not CONFIG2.AntiBlind then return end
+            local pg = LocalPlayer:FindFirstChild("PlayerGui")
+            if pg then
+                for _, v in ipairs(pg:GetDescendants()) do
+                    if v:IsA("ImageLabel") and (v.Name:lower():find("flash") or v.Name:lower():find("blind")) then
+                        v.Visible = false
+                    end
+                end
+            end
+        end))
+    end
+end
+
+local function setAntiTrap(on)
+    CONFIG2.AntiTrap = on
+    if on then
+        addConn(RunService.Heartbeat:Connect(function()
+            if not CONFIG2.AntiTrap then return end
+            local char = LocalPlayer.Character; if not char then return end
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum and hum.PlatformStand then hum.PlatformStand = false end
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp and hrp.Anchored then hrp.Anchored = false end
+        end))
+    end
+end
+
+local function setAntiGravityFlip(on)
+    if on then
+        STATE2.gravOriginal = workspace.Gravity
+        workspace.Gravity = math.abs(workspace.Gravity)
+    elseif STATE2.gravOriginal then
+        workspace.Gravity = STATE2.gravOriginal
+    end
+end
+
+local function setAntiSoundSpam(on)
+    CONFIG2.AntiSoundSpam = on
+    if on then
+        addConn(workspace.DescendantAdded:Connect(function(d)
+            if not CONFIG2.AntiSoundSpam then return end
+            if d:IsA("Sound") and d.Volume > 5 then d.Volume = 0.5 end
+        end))
+    end
+end
+
+local function setAntiParticleSpam(on)
+    CONFIG2.AntiParticleSpam = on
+    if on then
+        addConn(workspace.DescendantAdded:Connect(function(d)
+            if not CONFIG2.AntiParticleSpam then return end
+            if d:IsA("ParticleEmitter") or d:IsA("Smoke") or d:IsA("Fire") or d:IsA("Sparkles") then
+                d.Enabled = false
+            end
+        end))
+    end
+end
+
+local function setAntiLightning(on)
+    CONFIG2.AntiLightning = on
+    if on then
+        addConn(workspace.DescendantAdded:Connect(function(d)
+            if not CONFIG2.AntiLightning then return end
+            if d.Name:lower():find("lightning") or d.Name:lower():find("thunder") then
+                task.wait(0.05); pcall(function() d:Destroy() end)
+            end
+        end))
+    end
+end
+
+local function setInfiniteJump(on)
+    CONFIG2.InfiniteJump = on
+    if on then
+        addConn(UserInputService.JumpRequest:Connect(function()
+            if not CONFIG2.InfiniteJump then return end
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+        end))
+    end
+end
+
+local function setSpider(on)
+    CONFIG2.Spider = on
+    if on then
+        addConn(RunService.RenderStepped:Connect(function()
+            if not CONFIG2.Spider then return end
+            local hrp = getHRP(); if not hrp then return end
+            local ray = Ray.new(hrp.Position, -hrp.CFrame.UpVector * 3)
+            local hit = workspace:FindPartOnRay(ray, LocalPlayer.Character)
+            if hit then
+                local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if hum then hum:ChangeState(Enum.HumanoidStateType.Climbing) end
+            end
+        end))
+    end
+end
+
+local function setClickTP(on)
+    CONFIG2.ClickTP = on
+    if on then
+        addConn(UserInputService.InputBegan:Connect(function(input, gp)
+            if gp or not CONFIG2.ClickTP then return end
+            if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+            local mouse = LocalPlayer:GetMouse()
+            if mouse.Target then
+                local hrp = getHRP()
+                if hrp then hrp.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0, 3, 0)) end
+            end
+        end))
+    end
+end
+
+local function setFreeze(on)
+    CONFIG2.FreezePlayer = on
+    local hrp = getHRP(); if not hrp then return end
+    if on then
+        addConn(RunService.Heartbeat:Connect(function()
+            if hrp and CONFIG2.FreezePlayer then hrp.Anchored = true end
+        end))
+    else
+        hrp.Anchored = false
+    end
+end
+
+local function setHitboxExpander(on)
+    CONFIG2.HitboxExpander = on
+    if on then
+        addConn(RunService.Heartbeat:Connect(function()
+            if not CONFIG2.HitboxExpander then return end
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer and p.Character then
+                    local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp and not hrp:GetAttribute("AetherHitbox") then
+                        hrp:SetAttribute("AetherHitbox", true)
+                        hrp.Size = Vector3.new(CONFIG2.HitboxSize, CONFIG2.HitboxSize, CONFIG2.HitboxSize)
+                        hrp.Transparency = 0.7
+                    end
+                end
+            end
+        end))
+    end
+end-- ============================================================
+-- AETHER HUB MM2 — PARTE 8/12
+-- ============================================================
+local fly3Conn, fly3BV, fly3BG
+local function setFlyV3(on)
+    CONFIG2.FlyV3 = on
+    local hrp = getHRP()
+    if on then
+        if not hrp then return end
+        fly3BV = Instance.new("BodyVelocity", hrp)
+        fly3BV.Name = "AetherFly3"; fly3BV.MaxForce = Vector3.new(1e6,1e6,1e6)
+        fly3BG = Instance.new("BodyGyro", hrp)
+        fly3BG.Name = "AetherGyro3"; fly3BG.P = 5000; fly3BG.MaxTorque = Vector3.new(1e6,1e6,1e6); fly3BG.CFrame = hrp.CFrame
+        fly3Conn = RunService.RenderStepped:Connect(function()
+            if not CONFIG2.FlyV3 then return end
+            local h = getHRP(); if not h then return end
+            local cam = workspace.CurrentCamera
+            local dir = Vector3.zero
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then dir -= Vector3.new(0,1,0) end
+            fly3BV.Velocity = fly3BV.Velocity:Lerp(dir.Magnitude > 0 and dir.Unit * FlySpeed or Vector3.zero, 0.25)
+            fly3BG.CFrame = cam.CFrame
+        end)
+    else
+        if fly3Conn then fly3Conn:Disconnect(); fly3Conn = nil end
+        if fly3BV then fly3BV:Destroy(); fly3BV = nil end
+        if fly3BG then fly3BG:Destroy(); fly3BG = nil end
+    end
+end
+
+local airwalkConn
+local function setAirwalk(on)
+    CONFIG2.Airwalk = on
+    if on then
+        airwalkConn = RunService.Heartbeat:Connect(function()
+            if not CONFIG2.Airwalk then return end
+            local hrp = getHRP(); if not hrp then return end
+            local ray = Ray.new(hrp.Position, Vector3.new(0, -10, 0))
+            local hit = workspace:FindPartOnRay(ray, LocalPlayer.Character)
+            if not hit and hrp.AssemblyLinearVelocity.Y < -5 then
+                local bv = hrp:FindFirstChild("AetherAirwalkBV") or Instance.new("BodyVelocity", hrp)
+                bv.Name = "AetherAirwalkBV"; bv.MaxForce = Vector3.new(0, 1e5, 0)
+                bv.Velocity = Vector3.new(hrp.AssemblyLinearVelocity.X, 0, hrp.AssemblyLinearVelocity.Z)
+            end
+        end)
+    else
+        if airwalkConn then airwalkConn:Disconnect(); airwalkConn = nil end
+        local hrp = getHRP()
+        if hrp then local bv = hrp:FindFirstChild("AetherAirwalkBV"); if bv then bv:Destroy() end end
+    end
+end
+
+local phaseConn
+local function setPhase(on)
+    CONFIG2.Phase = on
+    local char = LocalPlayer.Character; if not char then return end
+    if on then
+        for _, p in ipairs(char:GetDescendants()) do
+            if p:IsA("BasePart") then p.CanCollide = false end
+        end
+        phaseConn = RunService.Stepped:Connect(function()
+            if not CONFIG2.Phase then return end
+            for _, p in ipairs(char:GetDescendants()) do
+                if p:IsA("BasePart") then p.CanCollide = false end
+            end
+        end)
+        task.delay(2, function()
+            if CONFIG2.Phase then
+                for _, p in ipairs(char:GetDescendants()) do
+                    if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then
+                        pcall(function() p.CanCollide = true end)
+                    end
+                end
+                CONFIG2.Phase = false
+                if phaseConn then phaseConn:Disconnect(); phaseConn = nil end
+            end
+        end)
+    else
+        if phaseConn then phaseConn:Disconnect(); phaseConn = nil end
+    end
+end
+
+local function rocketJump()
+    local hrp = getHRP(); if not hrp then return end
+    hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, 200, hrp.AssemblyLinearVelocity.Z)
+end
+
+local bunnyConn
+local function setBunnyHop(on)
+    CONFIG2.BunnyHop = on
+    if on then
+        bunnyConn = RunService.Heartbeat:Connect(function()
+            if not CONFIG2.BunnyHop then return end
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if hum and hrp and hum.FloorMaterial ~= Enum.Material.Air then
+                hum.Jump = true
+                local vel = hrp.AssemblyLinearVelocity
+                hrp.AssemblyLinearVelocity = Vector3.new(vel.X * 1.05, vel.Y, vel.Z * 1.05)
+            end
+        end)
+    else
+        if bunnyConn then bunnyConn:Disconnect(); bunnyConn = nil end
+    end
+end
+
+local function slide()
+    local hrp = getHRP(); if not hrp then return end
+    local vel = hrp.CFrame.LookVector * 80
+    hrp.AssemblyLinearVelocity = Vector3.new(vel.X, hrp.AssemblyLinearVelocity.Y, vel.Z)
+end
+
+local wallRunConn
+local function setWallRun(on)
+    CONFIG2.WallRun = on
+    if on then
+        wallRunConn = RunService.Heartbeat:Connect(function()
+            if not CONFIG2.WallRun then return end
+            local char = LocalPlayer.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+            local rayL = Ray.new(hrp.Position, -hrp.CFrame.RightVector * 3)
+            local rayR = Ray.new(hrp.Position,  hrp.CFrame.RightVector * 3)
+            if workspace:FindPartOnRay(rayL, char) or workspace:FindPartOnRay(rayR, char) then
+                if hrp.AssemblyLinearVelocity.Y < 5 then
+                    hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, 15, hrp.AssemblyLinearVelocity.Z)
+                end
+            end
+        end)
+    else
+        if wallRunConn then wallRunConn:Disconnect(); wallRunConn = nil end
+    end
+end
+
+local doubleJumpCount = 0
+local function setDoubleJump(on)
+    CONFIG2.DoubleJump = on
+    if not on then doubleJumpCount = 0; return end
+    addConn(UserInputService.JumpRequest:Connect(function()
+        if not CONFIG2.DoubleJump then return end
+        local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hum and hum.FloorMaterial == Enum.Material.Air and doubleJumpCount < 1 then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, 60, hrp.AssemblyLinearVelocity.Z)
+                doubleJumpCount += 1
+            end
+        end
+    end))
+    addConn(RunService.Heartbeat:Connect(function()
+        local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hum and hum.FloorMaterial ~= Enum.Material.Air then doubleJumpCount = 0 end
+    end))
+end
+
+local function dash()
+    local hrp = getHRP(); if not hrp then return end
+    hrp.AssemblyLinearVelocity = workspace.CurrentCamera.CFrame.LookVector * 150
+end
+
+local swimConn
+local function setSwimBoost(on)
+    CONFIG2.SwimBoost = on
+    if on then
+        swimConn = RunService.Heartbeat:Connect(function()
+            if not CONFIG2.SwimBoost then return end
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum and hum:GetState() == Enum.HumanoidStateType.Swimming then
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if hrp then hrp.AssemblyLinearVelocity = hrp.AssemblyLinearVelocity * 1.5 end
+            end
+        end)
+    else
+        if swimConn then swimConn:Disconnect(); swimConn = nil end
+    end
+end
+
+local vehicleFlyConn
+local function setVehicleFly(on)
+    if on then
+        vehicleFlyConn = RunService.Heartbeat:Connect(function()
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if not hum then return end
+            local seat = hum.SeatPart
+            if seat then
+                local cam = workspace.CurrentCamera
+                local dir = Vector3.zero
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
+                if dir.Magnitude > 0 then seat.AssemblyLinearVelocity = dir.Unit * 100 end
+            end
+        end)
+    else
+        if vehicleFlyConn then vehicleFlyConn:Disconnect(); vehicleFlyConn = nil end
+    end
+end-- ============================================================
+-- AETHER HUB MM2 — PARTE 9/12
+-- ============================================================
+local function setAutoThrowKnife(on)
+    CONFIG2.AutoThrowKnife = on
+    if not on then return end
+    addConn(RunService.Heartbeat:Connect(function()
+        if not CONFIG2.AutoThrowKnife then return end
+        local char = LocalPlayer.Character
+        local knife = char and char:FindFirstChild("Knife")
+        if not knife then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
+        local cam = workspace.CurrentCamera
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and not isSheriff(p) then
+                local tr = p.Character:FindFirstChild("HumanoidRootPart")
+                local th = p.Character:FindFirstChildOfClass("Humanoid")
+                if tr and th and th.Health > 0 and (hrp.Position - tr.Position).Magnitude < 60 then
+                    cam.CFrame = CFrame.new(cam.CFrame.Position, tr.Position)
+                    pcall(function()
+                        if knife:FindFirstChildOfClass("RemoteEvent") then knife.RemoteEvent:FireServer() end
+                    end)
+                    task.wait(0.5); return
+                end
+            end
+        end
+    end))
+end
+
+local function setAutoShoot(on)
+    CONFIG2.AutoShoot = on
+    if not on then return end
+    addConn(RunService.RenderStepped:Connect(function()
+        if not CONFIG2.AutoShoot then return end
+        local char = LocalPlayer.Character
+        local gun = char and char:FindFirstChild("Gun"); if not gun then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
+        local cam = workspace.CurrentCamera
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and isMurderer(p) then
+                local tr = p.Character:FindFirstChild("HumanoidRootPart")
+                local th = p.Character:FindFirstChildOfClass("Humanoid")
+                if tr and th and th.Health > 0 and (hrp.Position - tr.Position).Magnitude < 100 then
+                    cam.CFrame = CFrame.new(cam.CFrame.Position, tr.Position)
+                    pcall(function()
+                        if gun:FindFirstChildOfClass("RemoteEvent") then gun.RemoteEvent:FireServer() end
+                    end)
+                    task.wait(0.3); return
+                end
+            end
+        end
+    end))
+end
+
+local function setGunFastReload(on) CONFIG2.GunFastReload = on; if on then Notify("⚡ Fast Reload (se suportado)", Theme.Accent) end end
+local function setKnifeFastThrow(on) CONFIG2.KnifeFastThrow = on; if on then Notify("🗡️ Fast Throw (se suportado)", Theme.Accent) end end
+
+local function setCoinMagnet(on)
+    CONFIG2.CoinMagnet = on
+    if not on then return end
+    addConn(RunService.Heartbeat:Connect(function()
+        if not CONFIG2.CoinMagnet then return end
+        local hrp = getHRP(); if not hrp then return end
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and obj.Name:lower():find("coin") then
+                local dist = (obj.Position - hrp.Position).Magnitude
+                if dist < CONFIG2.CoinMagnetRaio and dist > 3 then
+                    local dir = (hrp.Position - obj.Position).Unit
+                    obj.CFrame = CFrame.new(obj.Position + dir * 3)
+                end
+            end
+        end
+    end))
+end
+
+local function setSheriffTracker(on)
+    if not on then return end
+    addConn(RunService.Heartbeat:Connect(function()
+        local hrp = getHRP(); if not hrp then return end
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and isSheriff(p) then
+                local tr = p.Character:FindFirstChild("HumanoidRootPart")
+                if tr and math.floor(tick()*2) % 2 == 0 then
+                    local dir = (tr.Position - hrp.Position).Unit
+                    if dir:Dot(hrp.CFrame.LookVector) < 0.3 then
+                        Notify("🔵 Sheriff atrás de você!", Color3.fromRGB(80, 150, 255))
+                    end
+                end
+            end
+        end
+        task.wait(1)
+    end))
+end
+
+local function setMurdererTracker(on)
+    if not on then return end
+    addConn(RunService.Heartbeat:Connect(function()
+        local hrp = getHRP(); if not hrp then return end
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and isMurderer(p) then
+                local tr = p.Character:FindFirstChild("HumanoidRootPart")
+                if tr then
+                    local d = (tr.Position - hrp.Position).Magnitude
+                    if d < 40 and math.floor(tick()*2) % 2 == 0 then
+                        Notify("🔴 Murderer a "..math.floor(d).."m!", Color3.fromRGB(255, 60, 60))
+                    end
+                end
+            end
+        end
+        task.wait(1)
+    end))
+end
+
+local function setAntiGunDrop(on)
+    if not on then return end
+    addConn(UserInputService.InputBegan:Connect(function(input, gp)
+        if gp then return end
+        if input.KeyCode == Enum.KeyCode.Backspace then input:Destroy() end
+    end))
+end
+
+local function setKnifePrediction(on)
+    local line = Drawing and Drawing.new("Line") or nil
+    if on and line then
+        addConn(RunService.RenderStepped:Connect(function()
+            local char = LocalPlayer.Character
+            local knife = char and char:FindFirstChild("Knife")
+            if not knife or not knife:IsA("BasePart") then line.Visible = false; return end
+            local cam = workspace.CurrentCamera
+            local p1 = cam:WorldToViewportPoint(knife.Position)
+            local p2 = cam:WorldToViewportPoint(knife.Position + knife.AssemblyLinearVelocity * 0.5)
+            if p1.Z > 0 and p2.Z > 0 then
+                line.From = Vector2.new(p1.X, p1.Y); line.To = Vector2.new(p2.X, p2.Y)
+                line.Color = Color3.fromRGB(255, 255, 0); line.Thickness = 2; line.Visible = true
+            else line.Visible = false end
+        end))
+    elseif line then line:Remove() end
+end
+
+local function setLastManStanding(on)
+    if not on then return end
+    task.spawn(function()
+        while true do
+            local vivos = 0
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character.Humanoid.Health > 0 then
+                    vivos += 1
+                end
+            end
+            if math.floor(tick()) % 5 == 0 then Log("Vivos: "..vivos) end
+            task.wait(1)
+        end
+    end)
+end
+
+local function setMurdererPredictor(on)
+    if not on then return end
+    addConn(RunService.Heartbeat:Connect(function()
+        task.wait(2)
+    end))
+end-- ============================================================
+-- AETHER HUB MM2 — PARTE 10/12
+-- ============================================================
+
+-- [CUSTOM CROSSHAIR]
+local crossGui, crossLabel
+local function setCustomCrosshair(on)
+    if on then
+        if not crossGui then
+            crossGui = Instance.new("ScreenGui")
+            crossGui.Name = "AetherCrosshair"; crossGui.ResetOnSpawn = false
+            crossGui.IgnoreGuiInset = true
+            crossGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+            crossLabel = Instance.new("TextLabel", crossGui)
+            crossLabel.Size = UDim2.new(0, 50, 0, 50)
+            crossLabel.Position = UDim2.new(0.5, -25, 0.5, -25)
+            crossLabel.BackgroundTransparency = 1; crossLabel.Text = "+"
+            crossLabel.TextColor3 = Theme.Accent; crossLabel.Font = Enum.Font.GothamBold
+            crossLabel.TextSize = 30; crossLabel.TextStrokeTransparency = 0.5
+        end
+        crossGui.Enabled = true
+    elseif crossGui then
+        crossGui.Enabled = false
+    end
+end
+
+-- [RGB AURA]
+local rgbAuraConn
+local function setRGBAura(on)
+    if on then
+        local hl = Instance.new("Highlight")
+        hl.Name = "AetherRGBAura"
+        hl.FillTransparency = 0.7; hl.OutlineTransparency = 0
+        rgbAuraConn = RunService.RenderStepped:Connect(function()
+            local char = LocalPlayer.Character; if not char then return end
+            hl.Parent = char; hl.Adornee = char
+            local cor = Color3.fromHSV((tick() * 0.5) % 1, 1, 1)
+            hl.FillColor = cor; hl.OutlineColor = cor
+        end)
+    else
+        if rgbAuraConn then rgbAuraConn:Disconnect(); rgbAuraConn = nil end
+        local char = LocalPlayer.Character
+        if char then local hl = char:FindFirstChild("AetherRGBAura"); if hl then hl:Destroy() end end
+    end
+end
+
+-- [TRAIL COLORIDO]
+local trailConn
+local function setTrailColorido(on)
+    if on then
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local att0 = Instance.new("Attachment", hrp); att0.Position = Vector3.new(0, 2, 0)
+            local att1 = Instance.new("Attachment", hrp); att1.Position = Vector3.new(0, -2, 0)
+            local trail = Instance.new("Trail", hrp)
+            trail.Name = "AetherTrail"; trail.Attachment0 = att0; trail.Attachment1 = att1
+            trail.Lifetime = 1.5; trail.LightEmission = 1
+            trail.Color = ColorSequence.new(Color3.fromRGB(255,0,255))
+            trailConn = RunService.RenderStepped:Connect(function()
+                trail.Color = ColorSequence.new(Color3.fromHSV((tick()*0.5)%1, 1, 1))
+            end)
+        end
+    else
+        if trailConn then trailConn:Disconnect(); trailConn = nil end
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local trail = hrp:FindFirstChild("AetherTrail"); if trail then trail:Destroy() end
+            for _, c in ipairs(hrp:GetChildren()) do
+                if c:IsA("Attachment") then c:Destroy() end
+            end
+        end
+    end
+end
+
+-- [ESP ULTRA - Highlights extras + ícones]
+local espExtra = {}
+addConn(RunService.Heartbeat:Connect(function()
+    if not espObjs then return end
+    local cam = workspace.CurrentCamera
+    local meuRoot = getHRP()
+    for model, o in pairs(espObjs) do
+        local dist = meuRoot and (meuRoot.Position - o.root.Position).Magnitude or 0
+        local vis = o.hum and o.hum.Health > 0 and dist <= ESPCfg.Max
+
+        local e = espExtra[model]
+        if not e then
+            e = {}
+            e.aura = Instance.new("Highlight")
+            e.aura.Adornee = model; e.aura.FillColor = Theme.Accent
+            e.aura.FillTransparency = 0.6; e.aura.OutlineTransparency = 1
+            e.aura.Enabled = false; e.aura.Parent = ESPHolder
+            espExtra[model] = e
+        end
+
+        if CONFIG2.ESPAuraPulsante and vis then
+            local s = 0.4 + math.sin(tick()*3) * 0.2
+            e.aura.Enabled = true
+            e.aura.FillTransparency = s
+            e.aura.FillColor = o.corBase
+        else
+            e.aura.Enabled = false
+        end
+    end
+    for m in pairs(espExtra) do
+        if not espObjs[m] then
+            pcall(function() espExtra[m].aura:Destroy() end)
+            espExtra[m] = nil
+        end
+    end
+end))-- ============================================================
+-- AETHER HUB MM2 — PARTE 11/12
+-- ============================================================
+local function criarAbaExtra(txt, ord)
+    local b = Instance.new("TextButton", U.TabBar)
+    b.Size = UDim2.new(0, 58, 1, -10); b.BackgroundColor3 = Theme.Background
+    b.BackgroundTransparency = 0.5; b.Text = txt; b.TextColor3 = Theme.TextDark
+    b.Font = Enum.Font.GothamMedium; b.TextSize = 9
+    b.AutoButtonColor = false; b.LayoutOrder = ord
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+    return b
+end
+local function criarPagExtra()
+    local p = Instance.new("ScrollingFrame", U.ContentArea)
+    p.Size = UDim2.new(1, -20, 1, -60); p.Position = UDim2.new(0, 10, 0, 50)
+    p.BackgroundTransparency = 1; p.Visible = false
+    p.ScrollBarThickness = 4; p.ScrollBarImageColor3 = Theme.Accent
+    p.CanvasSize = UDim2.new(0, 0, 0, 0); p.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    local l = Instance.new("UIListLayout", p); l.Padding = UDim.new(0, 6); l.SortOrder = Enum.SortOrder.LayoutOrder
+    local pad = Instance.new("UIPadding", p); pad.PaddingRight = UDim.new(0, 5)
+    return p
+end
+
+local abasNovas = {"Combate","Mov+","ESP+","Prot+","Social","Sistema","Fun","Config+"}
+local abasObj, pagsObj = {}, {}
+for i, nome in ipairs(abasNovas) do
+    local b = criarAbaExtra(nome, 5 + i)
+    local p = criarPagExtra()
+    table.insert(U.Abas, b); table.insert(U.Paginas, p)
+    table.insert(U.Nomes, nome)
+    abasObj[i] = b; pagsObj[i] = p
+    local idx = #U.Abas
+    b.MouseButton1Click:Connect(function()
+        for j = 1, #U.Abas do
+            U.Abas[j].BackgroundColor3 = Theme.Background
+            U.Abas[j].BackgroundTransparency = 0.5
+            U.Abas[j].TextColor3 = Theme.TextDark
+            U.Abas[j].Font = Enum.Font.GothamMedium
+            U.Paginas[j].Visible = false
+        end
+        U.Abas[idx].BackgroundColor3 = Theme.Accent
+        U.Abas[idx].BackgroundTransparency = 0
+        U.Abas[idx].TextColor3 = Theme.TextActive
+        U.Abas[idx].Font = Enum.Font.GothamBold
+        U.Paginas[idx].Visible = true
+        PageTitle.Text = U.Nomes[idx]
+        pushHistorico("Aba: " .. U.Nomes[idx])
+    end)
+end
+
+local PageCombate = pagsObj[1]; local PageMov2 = pagsObj[2]; local PageESP2 = pagsObj[3]
+local PageProt2   = pagsObj[4]; local PageSocial = pagsObj[5]; local PageSistema = pagsObj[6]
+local PageFun     = pagsObj[7]; local PageConfig2 = pagsObj[8]
+
+-- ── COMBATE ──
+header(PageCombate, "Murderer")
+criarToggle(PageCombate, "🗡️ Auto Throw Knife", nextOrder(), function(s) setAutoThrowKnife(s) end)
+criarToggle(PageCombate, "📐 Knife Prediction", nextOrder(), function(s) setKnifePrediction(s) end)
+criarToggle(PageCombate, "🗡️ Fast Throw", nextOrder(), function(s) setKnifeFastThrow(s) end)
+header(PageCombate, "Sheriff")
+criarToggle(PageCombate, "🔫 Auto Shoot", nextOrder(), function(s) setAutoShoot(s) end)
+criarToggle(PageCombate, "⚡ Fast Reload", nextOrder(), function(s) setGunFastReload(s) end)
+criarToggle(PageCombate, "🎯 Anti-Gun Drop", nextOrder(), function(s) setAntiGunDrop(s) end)
+header(PageCombate, "Trackers")
+criarToggle(PageCombate, "🔵 Sheriff Tracker", nextOrder(), function(s) setSheriffTracker(s) end)
+criarToggle(PageCombate, "🔴 Murderer Tracker", nextOrder(), function(s) setMurdererTracker(s) end)
+criarToggle(PageCombate, "👁️ Last Man Standing", nextOrder(), function(s) setLastManStanding(s) end)
+criarToggle(PageCombate, "🔮 Murderer Predictor", nextOrder(), function(s) setMurdererPredictor(s) end)
+header(PageCombate, "Farm")
+criarToggle(PageCombate, "🧲 Coin Magnet", nextOrder(), function(s) setCoinMagnet(s) end)
+criarSlider(PageCombate, "Raio Magnet", 20, 200, 50, nextOrder(), function(v) CONFIG2.CoinMagnetRaio = v end)
+
+-- ── MOV+ ──
+header(PageMov2, "Voo")
+criarToggle(PageMov2, "✈️ Fly v3 (suave)", nextOrder(), function(s) setFlyV3(s) end)
+criarToggle(PageMov2, "🎈 Airwalk", nextOrder(), function(s) setAirwalk(s) end)
+criarToggle(PageMov2, "🚗 Vehicle Fly", nextOrder(), function(s) setVehicleFly(s) end)
+header(PageMov2, "Corrida")
+criarToggle(PageMov2, "🐰 Bunny Hop", nextOrder(), function(s) setBunnyHop(s) end)
+criarToggle(PageMov2, "🏃 Wall Run", nextOrder(), function(s) setWallRun(s) end)
+criarToggle(PageMov2, "🌊 Swim Boost", nextOrder(), function(s) setSwimBoost(s) end)
+header(PageMov2, "Ações (clique)")
+addBtn(PageMov2, "🚀 Rocket Jump", rocketJump)
+addBtn(PageMov2, "🛷 Slide", slide)
+addBtn(PageMov2, "💨 Dash", dash)
+header(PageMov2, "Especiais")
+criarToggle(PageMov2, "👻 Phase (atravessa)", nextOrder(), function(s) setPhase(s) end)
+criarToggle(PageMov2, "🦘 Double Jump", nextOrder(), function(s) setDoubleJump(s) end)
+
+-- ── ESP+ ──
+header(PageESP2, "Visual")
+criarToggle(PageESP2, "🖼️ Avatar no ESP", nextOrder(), function(s) CONFIG2.ESPAvatar = s end)
+criarToggle(PageESP2, "🎤 Voice Chat", nextOrder(), function(s) CONFIG2.ESPVoiceChat = s end)
+criarToggle(PageESP2, "🎭 Status Icon", nextOrder(), function(s) CONFIG2.ESPStatusIcon = s end)
+criarToggle(PageESP2, "🗡️ Arma Flutuante", nextOrder(), function(s) CONFIG2.ESPArma = s end)
+header(PageESP2, "Efeitos")
+criarToggle(PageESP2, "🌫️ Fade por Distância", nextOrder(), function(s) CONFIG2.ESPFadeDistance = s end)
+criarToggle(PageESP2, "✨ Aura Pulsante", nextOrder(), function(s) CONFIG2.ESPAuraPulsante = s end)
+criarToggle(PageESP2, "🎯 Crosshair por Alvo", nextOrder(), function(s) CONFIG2.ESPCrosshairAlvo = s end)
+
+-- ── PROT+ ──
+header(PageProt2, "Anti Server")
+criarToggle(PageProt2, "🚫 Anti-Report", nextOrder(), function(s) setAntiReport(s) end)
+criarToggle(PageProt2, "👁️ Anti-Spectate", nextOrder(), function(s) setAntiSpectate(s) end)
+criarToggle(PageProt2, "📸 Anti-Screenshot", nextOrder(), function(s) setAntiScreenshot(s) end)
+criarToggle(PageProt2, "👢 Anti-Remote Kick", nextOrder(), function(s) setAntiRemoteKick(s) end)
+header(PageProt2, "Anti Efeitos")
+criarToggle(PageProt2, "❤️ Anti-Damage", nextOrder(), function(s) setAntiDamageLocal(s) end)
+criarToggle(PageProt2, "🐌 Anti-Slow", nextOrder(), function(s) setAntiSlow(s) end)
+criarToggle(PageProt2, "⚡ Anti-Blind", nextOrder(), function(s) setAntiBlind(s) end)
+criarToggle(PageProt2, "🪤 Anti-Trap", nextOrder(), function(s) setAntiTrap(s) end)
+criarToggle(PageProt2, "🌀 Anti-Gravity", nextOrder(), function(s) setAntiGravityFlip(s) end)
+criarToggle(PageProt2, "🔊 Anti-Sound Spam", nextOrder(), function(s) setAntiSoundSpam(s) end)
+criarToggle(PageProt2, "💥 Anti-Particle", nextOrder(), function(s) setAntiParticleSpam(s) end)
+criarToggle(PageProt2, "⚡ Anti-Lightning", nextOrder(), function(s) setAntiLightning(s) end)
+
+-- ── SOCIAL ──
+header(PageSocial, "Players")
+addBtn(PageSocial, "🎲 TP Player Aleatório", function()
+    local nomes = {}
+    for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer then table.insert(nomes, p.Name) end end
+    if #nomes == 0 then Notify("❌ Nenhum player", Color3.fromRGB(255,100,100)); return end
+    local alvo = Players:FindFirstChild(nomes[math.random(1, #nomes)])
+    if alvo and alvo.Character then
+        local hrp = getHRP(); local tr = alvo.Character:FindFirstChild("HumanoidRootPart")
+        if hrp and tr then hrp.CFrame = tr.CFrame * CFrame.new(0, 3, 0); Notify("📍 TP "..alvo.Name, Theme.Accent) end
+    end
+end)
+addBtn(PageSocial, "👥 Ver Amigos", function()
+    local lista = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            local ok, éAmigo = pcall(function() return LocalPlayer:IsFriendsWith(p.UserId) end)
+            if ok and éAmigo then table.insert(lista, p.Name) end
+        end
+    end
+    Notify(#lista > 0 and ("👥 "..table.concat(lista, ", ")) or "👥 Nenhum amigo", Theme.Accent)
+end)
+
+-- ── SISTEMA ──
+header(PageSistema, "Debug")
+criarToggle(PageSistema, "🐛 Debug Mode", nextOrder(), function(s) CONFIG2.DebugMode = s end)
+criarToggle(PageSistema, "⚡ Performance Mode", nextOrder(), function(s) CONFIG2.PerformanceMode = s end)
+header(PageSistema, "Log")
+local logLabel = Instance.new("TextLabel", PageSistema)
+logLabel.Size = UDim2.new(1, -20, 0, 160); logLabel.BackgroundColor3 = Theme.Background
+logLabel.BackgroundTransparency = 0.3; logLabel.TextColor3 = Theme.Text
+logLabel.Font = Enum.Font.Code; logLabel.TextSize = 10
+logLabel.TextXAlignment = Enum.TextXAlignment.Left; logLabel.TextYAlignment = Enum.TextYAlignment.Top
+logLabel.TextWrapped = true; logLabel.LayoutOrder = nextOrder()
+logLabel.Text = "  Histórico vazio"
+Instance.new("UICorner", logLabel).CornerRadius = UDim.new(0, 6)
+local lsx = Instance.new("UIStroke", logLabel); lsx.Color = Theme.LineColor; lsx.Thickness = 1; lsx.Transparency = 0.5
+task.spawn(function()
+    while logLabel.Parent do
+        logLabel.Text = "  📜 Histórico:\n" .. (#CONFIG2.UIHistorico > 0 and table.concat(CONFIG2.UIHistorico, "\n  • ") or "  (vazio)")
+        task.wait(1)
+    end
+end)
+addBtn(PageSistema, "🗑️ Limpar Histórico", function() CONFIG2.UIHistorico = {}; Notify("🗑️ Limpo", Theme.Accent) end)
+addBtn(PageSistema, "ℹ️ Info", function() Notify("Aether MM2 v2.0 — "..tostring(identifyexecutor and identifyexecutor() or "?"), Theme.Accent) end)
+
+-- ── FUN ──
+header(PageFun, "Visual")
+criarToggle(PageFun, "🎯 Custom Crosshair", nextOrder(), function(s) setCustomCrosshair(s) end)
+criarToggle(PageFun, "💥 Hitmarker", nextOrder(), function(s) CONFIG2.Hitmarker = s end)
+criarToggle(PageFun, "🌈 RGB Aura", nextOrder(), function(s) setRGBAura(s) end)
+criarToggle(PageFun, "🎨 Trail Colorido", nextOrder(), function(s) setTrailColorido(s) end)
+header(PageFun, "Câmera")
+criarSlider(PageFun, "FOV", 50, 120, 70, nextOrder(), function(v) workspace.CurrentCamera.FieldOfView = v end)
+
+-- ── CONFIG+ ──
+header(PageConfig2, "Aparência")
+criarSlider(PageConfig2, "Opacidade da UI (%)", 0, 100, 0, nextOrder(), function(v) U.MainFrame.BackgroundTransparency = v / 100 end)
+header(PageConfig2, "Atalhos")
+local txtA = Instance.new("TextLabel", PageConfig2)
+txtA.Size = UDim2.new(1, -20, 0, 130); txtA.BackgroundColor3 = Theme.Background
+txtA.BackgroundTransparency = 0.3; txtA.TextColor3 = Theme.Text
+txtA.Font = Enum.Font.Code; txtA.TextSize = 11
+txtA.TextXAlignment = Enum.TextXAlignment.Left; txtA.TextYAlignment = Enum.TextYAlignment.Top
+txtA.LayoutOrder = nextOrder()
+txtA.Text = "  ⌨️ ATALHOS:\n\n  F1 → Fly ON/OFF\n  F2 → Noclip ON/OFF\n  F3 → Inf Jump ON/OFF\n  F4 → Anti-Void ON/OFF\n  F12 → PÂNICO\n  RCtrl → Esconder UI"
+Instance.new("UICorner", txtA).CornerRadius = UDim.new(0, 6)
+local tsA = Instance.new("UIStroke", txtA); tsA.Color = Theme.LineColor; tsA.Thickness = 1; tsA.Transparency = 0.5
+header(PageConfig2, "Exportar")
+addBtn(PageConfig2, "📤 Copiar Config JSON", function()
+    pcall(function()
+        local HttpService = game:GetService("HttpService")
+        if setclipboard then setclipboard(HttpService:JSONEncode(CONFIG2)); Notify("📤 Copiado!", Theme.Accent) end
+    end)
+end)-- ============================================================
+-- AETHER HUB MM2 — PARTE 12/12
+-- ============================================================
+
+-- [WATERMARK]
+local WM = Instance.new("Frame", ScreenGui)
+WM.Name = "AetherWatermark"
+WM.Size = UDim2.new(0, 240, 0, 60)
+WM.Position = UDim2.new(0, 10, 1, -75)
+WM.BackgroundColor3 = Theme.Background; WM.BackgroundTransparency = 0.15
+WM.BorderSizePixel = 0; WM.ZIndex = 50
+Instance.new("UICorner", WM).CornerRadius = UDim.new(0, 10)
+local wms = Instance.new("UIStroke", WM); wms.Color = Theme.Accent; wms.Thickness = 2
+
+local WMTitle = Instance.new("TextLabel", WM)
+WMTitle.Size = UDim2.new(1, -10, 0, 20); WMTitle.Position = UDim2.new(0, 10, 0, 4)
+WMTitle.BackgroundTransparency = 1; WMTitle.Text = "🟣 Aether Hub MM2"
+WMTitle.TextColor3 = Theme.Accent; WMTitle.Font = Enum.Font.GothamBold
+WMTitle.TextSize = 13; WMTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local WMInfo = Instance.new("TextLabel", WM)
+WMInfo.Size = UDim2.new(1, -10, 0, 32); WMInfo.Position = UDim2.new(0, 10, 0, 24)
+WMInfo.BackgroundTransparency = 1; WMInfo.Text = "FPS: -- | Ping: -- | Players: --"
+WMInfo.TextColor3 = Theme.Text; WMInfo.Font = Enum.Font.GothamMedium
+WMInfo.TextSize = 11; WMInfo.TextXAlignment = Enum.TextXAlignment.Left
+
+task.spawn(function()
+    local frames, lastTime = 0, tick()
+    while WM.Parent do
+        frames += 1
+        if tick() - lastTime >= 1 then
+            local fps = math.floor(frames / (tick() - lastTime))
+            frames, lastTime = 0, tick()
+            local ping = "?"
+            pcall(function() ping = math.floor(LocalPlayer:GetNetworkPing() * 1000) end)
+            WMInfo.Text = string.format("FPS: %d | Ping: %sms | Players: %d", fps, ping, #Players:GetPlayers())
+        end
+        task.wait(1 / 60)
+    end
+end)
+
+-- [KEYBINDS]
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    local k = input.KeyCode
+    if k == KEYBINDS.Fly then
+        setFly(not flyState.on)
+        Notify(flyState.on and "✈️ Fly ON" or "✈️ Fly OFF", Theme.Accent)
+    elseif k == KEYBINDS.Noclip then
+        NoclipAtivo = not NoclipAtivo
+        Notify(NoclipAtivo and "👻 Noclip ON" or "👻 Noclip OFF", Theme.Accent)
+    elseif k == KEYBINDS.InfiniteJump then
+        setInfiniteJump(not CONFIG2.InfiniteJump)
+        Notify(CONFIG2.InfiniteJump and "🦘 Inf Jump ON" or "🦘 Inf Jump OFF", Theme.Accent)
+    elseif k == KEYBINDS.AntiVoid then
+        setAntiVoid(not CONFIG2.AntiVoid)
+        Notify(CONFIG2.AntiVoid and "💀 Anti-Void ON" or "💀 Anti-Void OFF", Theme.Accent)
+    elseif k == KEYBINDS.HideUI then
+        U.MainFrame.Visible = not U.MainFrame.Visible
+    elseif k == KEYBINDS.Panic then
+        pcall(function()
+            setFly(false); setAntiVoid(false); setAntiRagdoll(false); setAntiFling(false)
+            setAntiTP(false); setInfiniteJump(false); setSpider(false); setClickTP(false)
+            setFreeze(false); setHitboxExpander(false); setAutoThrowKnife(false)
+            setAutoShoot(false); setCoinMagnet(false); setGodMode(false)
+            NoclipAtivo = false; CONFIG2.Watermark = false
+            U.MainFrame.Visible = false
+            Notify("🚨 PÂNICO — tudo desligado", Color3.fromRGB(255, 80, 80))
+        end)
+    end
+end)
+
+-- [COMANDOS DE CHAT]
+pcall(function()
+    LocalPlayer.Chatted:Connect(function(msg)
+        local m = msg:lower():gsub("^/", "")
+        if m == "fly on" then setFly(true); Notify("✈️ Fly ON", Theme.Accent) end
+        if m == "fly off" then setFly(false); Notify("✈️ Fly OFF", Theme.Accent) end
+        if m == "noclip" then NoclipAtivo = not NoclipAtivo; Notify("👻 Noclip: "..tostring(NoclipAtivo), Theme.Accent) end
+        if m == "panic" then
+            UserInputService:SendKeyEvent(true, Enum.KeyCode.F12, false, game)
+            UserInputService:SendKeyEvent(false, Enum.KeyCode.F12, false, game)
+        end
+    end)
+end)
+
+-- [FINAL]
+task.wait(0.3)
+Notify("🟣 Aether Hub MM2 carregado!", Theme.Accent)
+print("[Aether Hub MM2] ✅ Carregado com sucesso — 174 funções · Key: AETHER-X")
+print("[Aether Hub MM2] Atalhos: F1 Fly · F2 Noclip · F3 Inf Jump · F4 Anti-Void · F12 Pânico · RCtrl UI")
